@@ -114,12 +114,190 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
+        int b_size = this.board.size();
+        int score = 0;
+        MoveResult res = new MoveResult(0,false);
+        // 遍历判断side方向是否能够move
+        if(side == Side.NORTH) {
+            for (int col = 0; col < b_size; col++) {
+                res=upMoveOneCol(this.board, col);
+                score += res.score;
+                changed |= res.ischanged;
+            }
+            this.score += score;
+
+//            changed = true;
+        } else if (side == Side.SOUTH)
+        {
+            board.setViewingPerspective(Side.SOUTH);
+            for (int col = 0; col < b_size; col++) {
+                res=upMoveOneCol(this.board, col);
+                score += res.score;
+                changed |= res.ischanged;
+            }
+            this.score += score;
+
+//            changed = true;
+            board.setViewingPerspective(Side.NORTH);
+
+        } else if (side == Side.EAST) {
+            board.setViewingPerspective(Side.EAST);
+            for (int col = 0; col < b_size; col++) {
+                res=upMoveOneCol(this.board, col);
+                score += res.score;
+                changed |= res.ischanged;
+            }
+            this.score += score;
+
+//            changed = true;
+            board.setViewingPerspective(Side.NORTH);
+        }
+        else
+        {
+            board.setViewingPerspective(Side.WEST);
+            for (int col = 0; col < b_size; col++) {
+                res=upMoveOneCol(this.board, col);
+                score += res.score;
+                changed |= res.ischanged;
+            }
+            this.score += score;
+
+//            changed = true;
+            board.setViewingPerspective(Side.NORTH);
+        }
+
+
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
     }
+
+    // titl helper func for one col
+    public static MoveResult upMoveOneCol(Board b,int col){
+        int b_size = b.size();
+
+        boolean[] temp = new boolean[]{false,false,false,false};
+        MoveResult result =new MoveResult(0,false);
+        // top row
+        if(b.tile(col,3) ==null)
+        {
+            // mark the null
+            temp[3] = true;
+        }
+        else{
+            for(int i=2;i>=0;i--)
+            {
+                if(b.tile(col,i)!=null)
+                {
+                    if(b.tile(col,i).value() != b.tile(col,3).value())
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //merge
+                        b.move(col,3,b.tile(col,i));
+                        temp[3] = false;
+                        temp[i] = true;
+                        result.ischanged = true;
+                        result.score += b.tile(col,3).value();
+                        break;
+                    }
+                }
+            }
+        }
+        // 2nd top row
+        if(b.tile(col,2) == null)
+        {
+            temp[2] = true;
+        }
+        else
+        {
+            if(temp[2] == true){
+                // goto null
+                for(int i=1;i>=0;i--){
+                    if(b.tile(col,i) != null){
+                        b.move(col,2,b.tile(col,i));
+                        temp[2] = false;
+                        temp[i] = true;
+                        result.ischanged = true;
+
+                        break;
+                    }
+                }
+            }
+            else{
+                for(int i=1;i>=0;i--)
+                {
+                    if(b.tile(col,i) !=null)
+                    {
+                        if(b.tile(col,i).value() == b.tile(col,2).value())
+                        {
+                            //merge
+                            b.move(col,2,b.tile(col,i));
+                            temp[2] = false;
+                            temp[i] = true;
+                            result.ischanged = true;
+                            result.score += b.tile(col,2).value();
+                            break;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        //3rd top row
+        if(b.tile(col,1) ==null)
+        {
+            temp[1] = true;
+        }
+        else
+        {
+            if(b.tile(col,0) != null)
+            {
+                if(b.tile(col,1).value() == b.tile(col,0).value())
+                {
+                    //merge
+                    b.move(col,1,b.tile(col,0));
+                    temp[1] = false;
+                    temp[0] = true;
+                    result.ischanged = true;
+                    result.score += b.tile(col,1).value();
+                }
+            }
+        }
+        result.ischanged |=helpMove2null(temp,b,col);
+        return result;
+    }
+
+    // helper func to get the right position
+    public static boolean helpMove2null(boolean[] temp,Board b,int col)
+    {
+        boolean is_changed = false;
+        for(int i=b.size()-1;i>=0;i--)
+        {
+            if(b.tile(col,i)!=null)
+            {
+                for(int j=b.size()-1;j>0;j--)
+                {
+                    if(temp[j] == true && j>i)
+                    {
+                        b.move(col,j,b.tile(col,i));
+                        temp[i] = true;
+                        temp[j] = false;
+                        is_changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return is_changed;
+    }
+
 
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
@@ -138,6 +316,17 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int b_size = b.size();
+        for(int i=0;i<b_size;i++)
+        {
+            for(int j=0;j<b_size;j++)
+            {
+                if(b.tile(i,j) == null)
+                {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +337,21 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        int b_size = b.size();
+        for(int i=0;i<b_size;i++)
+        {
+            for(int j=0;j<b_size;j++)
+            {
+                Tile t = b.tile(i,j);
+                if(t == null){
+                    continue;
+                }
+                if(t.value() == MAX_PIECE)
+                {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +363,69 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        int b_size = b.size();
+        //at least one empty spcae
+        for(int i=0;i<b_size;i++)
+        {
+            for(int j=0;j<b_size;j++)
+            {
+                Tile t = b.tile(i,j);
+                // at least one empty space on the board
+                if(t == null) {
+                    return true;
+                }
+            }
+        }
+        return checkSameValues(b);
+    }
+
+    //helper function
+    public static boolean checkSameValues(Board b)
+    {
+        /**
+         *  up:[i][j+1]
+         *  down:[i][j-1]
+         *  left:[i-1][j]
+         *  right:[i+1][j]
+         * */
+
+        int b_size = b.size();
+        Tile up_t = null;
+        Tile down_t = null;
+        Tile left_t = null;
+        Tile right_t = null;
+        for(int i=0;i<b_size;i++)
+        {
+            for(int j=0;j<b_size;j++)
+            {
+                Tile curr_t = b.tile(i,j);
+                if(j+1<b_size){
+                    up_t = b.tile(i,j+1);
+                    if(curr_t.value() == up_t.value()){
+                        return true;
+                    }
+                }
+                if(j-1>=0){
+                    down_t = b.tile(i,j-1);
+                    if(curr_t.value() == down_t.value()){
+                        return true;
+                    }
+                }
+                if(i-1>=0){
+                    left_t = b.tile(i-1,j);
+                    if(curr_t.value() == left_t.value()){
+                        return true;
+                    }
+                }
+                if(i+1<b_size){
+                    right_t = b.tile(i+1,j);
+                    if(curr_t.value() == right_t.value()){
+                        return true;
+                    }
+                }
+
+            }
+        }
         return false;
     }
 
@@ -199,5 +466,16 @@ public class Model extends Observable {
     /** Returns hash code of Model’s string. */
     public int hashCode() {
         return toString().hashCode();
+    }
+}
+
+class MoveResult{
+    int score;
+    boolean ischanged;
+
+    MoveResult(int score,boolean ischanged)
+    {
+        this.score = score;
+        this.ischanged = ischanged;
     }
 }
