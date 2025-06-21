@@ -108,11 +108,13 @@ public class ArrayDeque<Item> {
 
 
     public Item get(int index){
-        if(index <= nextFirst || index >= nextLast)
-        {
-            return null;
-        }
         return items[nextFirst + 1 + index];
     }
+
+//    public static void main(String args[]){
+//        ArrayDeque<Integer> test = new ArrayDeque();
+//        test.addFirst(2);
+//        System.out.println(test.get(0));
+//    }
 
 }
