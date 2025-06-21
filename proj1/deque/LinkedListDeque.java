@@ -104,11 +104,12 @@ public class LinkedListDeque<Item>
         IntNode next2Node = nextNode.next;
         // assert not null
         if(p.next != sentinel){
+            Item res = nextNode.item;
             p.next = next2Node;
             next2Node.prev = p;
             nextNode = null;
             size -= 1;
-            return p.next.item;
+            return res;
         }
         return null;
     }
@@ -120,11 +121,12 @@ public class LinkedListDeque<Item>
         IntNode last2Node = lastNode.prev;
         //assert not null
         if(p.prev != sentinel){
+            Item res = lastNode.item;
             p.prev = last2Node;
             last2Node.next = p;
             lastNode = null;
             size -= 1;
-            return p.prev.item;
+            return res;
         }
         return  null;
     }

@@ -84,8 +84,10 @@ public class ArrayDeque<Item> {
             return null;
         }
         nextFirst += 1;
+        Item res = items[nextFirst];
         items[nextFirst] = null;    //remove the First item
-        return items[nextFirst+1];  //return the removed's next item
+        size -=1;
+        return res;  //return the removed's next item
     }
 
     public Item removeLast(){
@@ -98,8 +100,10 @@ public class ArrayDeque<Item> {
             return null;
         }
         nextLast -= 1;
+        Item res = items[nextLast];
         items[nextLast] = null;
-        return items[nextFirst-1];
+        size -= 1;
+        return res;
     }
 
 
@@ -108,16 +112,7 @@ public class ArrayDeque<Item> {
         {
             return null;
         }
-        return items[index];
+        return items[nextFirst + 1 + index];
     }
 
-//    public static void main(String args[]){
-//        ArrayDeque<Integer> aDeque = new ArrayDeque<Integer>();
-//        for(int i=0;i<5;i++)
-//            aDeque.addLast(i);
-//
-//        aDeque.printDeque();
-//        System.out.println("size: "+ aDeque.get(12));
-//
-//    }
 }
