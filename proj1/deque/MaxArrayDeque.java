@@ -1,6 +1,5 @@
 package deque;
 
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.Comparator;
 public class MaxArrayDeque<Item> extends ArrayDeque<Item> {
