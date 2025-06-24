@@ -3,7 +3,7 @@ package deque;
 import afu.org.checkerframework.checker.igj.qual.I;
 import jh61b.junit.In;
 
-public class LinkedListDeque<Item>
+public class LinkedListDeque<Item> implements Deque<Item>
 {
     /**
      *  create a Node class for ListDeque
@@ -44,7 +44,7 @@ public class LinkedListDeque<Item>
         sentinel.prev = sentinel.next;
         size = 1;
     }
-
+    @Override
     public void addFirst(Item item)
     {
         IntNode temp = sentinel.next;
@@ -52,7 +52,7 @@ public class LinkedListDeque<Item>
         temp.prev = sentinel.next;  // sentinel <--> new_firstNode <--> temp
         size +=1;
     }
-
+    @Override
     public void addLast(Item item)
     {
         IntNode p = sentinel;
@@ -63,21 +63,24 @@ public class LinkedListDeque<Item>
         size = size + 1;
     }
 
-    public boolean isEmpty()
-    {
-        IntNode p = sentinel;
-        if(p.next == sentinel)
-        {
-            return true;
-        }
-        return false;
-    }
+//    @Override
+//    public boolean isEmpty()
+//    {
+//        IntNode p = sentinel;
+//        if(p.next == sentinel)
+//        {
+//            return true;
+//        }
+//        return false;
+//    }
 
+    @Override
     public int size()
     {
         return size;
     }
 
+    @Override
     public void printDeque()
     {
         IntNode p = sentinel;
@@ -97,6 +100,7 @@ public class LinkedListDeque<Item>
 
     }
 
+    @Override
     public Item removeFirst()
     {
         IntNode p = sentinel;
@@ -114,6 +118,7 @@ public class LinkedListDeque<Item>
         return null;
     }
 
+    @Override
     public Item removeLast()
     {
         IntNode p = sentinel;
@@ -131,6 +136,7 @@ public class LinkedListDeque<Item>
         return  null;
     }
 
+    @Override
     public Item get(int index)
     {
         IntNode p = sentinel;
@@ -157,6 +163,15 @@ public class LinkedListDeque<Item>
         }
         return getRecursiveHelper(sentinel.next,index);
     }
+
+//    public Iterator<Item> iterator(){
+//
+//    }
+//
+//    public boolean equals(Object obj){
+//
+//
+//    }
 
 //    public static void main(String args[])
 //    {

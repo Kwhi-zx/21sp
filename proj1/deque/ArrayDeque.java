@@ -1,6 +1,6 @@
 package deque;
 
-public class ArrayDeque<Item> {
+public class ArrayDeque<Item> implements Deque<Item>{
     private int size;
     private Item[] items;
     private int nextFirst;
@@ -26,6 +26,7 @@ public class ArrayDeque<Item> {
         nextLast  = dstPos+size;
     }
 
+    @Override
     public void addFirst(Item item)
     {
         if(nextFirst < 0 ){
@@ -36,6 +37,7 @@ public class ArrayDeque<Item> {
         nextFirst -= 1;
     }
 
+    @Override
     public void addLast(Item item)
     {
         if(nextLast >= items.length){
@@ -48,20 +50,23 @@ public class ArrayDeque<Item> {
 
     }
 
-    public boolean isEmpty()
-    {
-        if(size == 0)
-        {
-            return true;
-        }
-        return false;
-    }
+//    @Override
+//    public boolean isEmpty()
+//    {
+//        if(size == 0)
+//        {
+//            return true;
+//        }
+//        return false;
+//    }
 
+    @Override
     public int size()
     {
         return size;
     }
 
+    @Override
     public void printDeque()
     {
         for(int i=nextFirst+1;i<nextLast;i++)
@@ -74,6 +79,7 @@ public class ArrayDeque<Item> {
         }
     }
 
+    @Override
     public Item removeFirst()
     {
         if(items.length >=16 && size*4 < items.length){
@@ -90,6 +96,7 @@ public class ArrayDeque<Item> {
         return res;  //return the removed's next item
     }
 
+    @Override
     public Item removeLast(){
         //resize
         if(items.length >=16 && size*4 < items.length){
@@ -107,6 +114,7 @@ public class ArrayDeque<Item> {
     }
 
 
+    @Override
     public Item get(int index){
         return items[nextFirst + 1 + index];
     }
