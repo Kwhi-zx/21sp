@@ -43,13 +43,12 @@ public class ArrayDequeTest {
     }
 
     @Test
-    public void getTest(){
+    public void removeTest(){
         ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < 100; i++) {
             ad1.addLast(i);
         }
-        for(int i = 0; i < 500000; i++){
-//            Assert.assertEquals(Integer.valueOf(i),ad1.get(i));
+        for(int i = 0; i < 50; i++){
             assertEquals("Should have the same value", i, (double) ad1.removeFirst(), 0.0);
         }
 

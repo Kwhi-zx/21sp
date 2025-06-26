@@ -56,7 +56,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
         items[nextLast] = item;
         size += 1;
-        nextLast = (nextLast + 1 + items.length) % items.length; // circular
+        nextLast = (nextLast + 1) % items.length; // circular
     }
 
 //    @Override
@@ -176,7 +176,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
                 return false;
             }
             for(int i=0;i<this.size;i++){
-                if(Objects.equals(this.get(i),deque.get(i)))
+//                if(Objects.equals(this.get(i),deque.get(i)))
+                if(this.get(i) != deque.get(i))
                 {
                     return false;
                 }
@@ -186,14 +187,14 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return false;
     }
 
-    public static void main(String args[]){
-        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
-        Iterator<Integer> iter1 = ad1.iterator();
-        ad1.addFirst(1);
-        ad1.addLast(1);
-        ad1.printDeque();
-        while (iter1.hasNext()){
-            System.out.println(iter1.next());
-        }
-    }
+//    public static void main(String args[]){
+//        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+//        Iterator<Integer> iter1 = ad1.iterator();
+//        ad1.addFirst(1);
+//        ad1.addLast(1);
+//        ad1.printDeque();
+//        while (iter1.hasNext()){
+//            System.out.println(iter1.next());
+//        }
+//    }
 }
