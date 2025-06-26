@@ -45,11 +45,11 @@ public class ArrayDequeTest {
     @Test
     public void getTest(){
         ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
-        for (int i = 0; i < 200; i++) {
-            ad1.addFirst(i);
+        for (int i = 0; i < 1000000; i++) {
+            ad1.addLast(i);
         }
-        for(int i = 0; i < 200; i++){
-            System.out.println(":  "+ ad1.get(i));
+        for(int i = 0; i < 1000000; i++){
+            Assert.assertEquals(Integer.valueOf(i),ad1.get(i));
         }
     }
 
@@ -59,5 +59,9 @@ public class ArrayDequeTest {
         ad1.removeFirst();
 //        System.out.println(ad1.size());
         Assert.assertEquals(0,ad1.size());
+    }
+
+    public void iteratorTest(){
+        ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
     }
 }

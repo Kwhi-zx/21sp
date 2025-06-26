@@ -136,11 +136,11 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return new ArrayDequeIterator();
     }
 
-    public class ArrayDequeIterator implements Iterator<T>{
+    private class ArrayDequeIterator implements Iterator<T>{
         private int wizPos;
 
         public ArrayDequeIterator(){
-            wizPos = nextFirst + 1;
+            wizPos = 0;
         }
 
         public boolean hasNext(){
@@ -148,8 +148,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
         public T next(){
             T returnItem = get(wizPos);
-//            wizPos += 1;
-            wizPos = (wizPos + 1 + items.length) % items.length;
+            wizPos += 1;
             return returnItem;
         }
     }
@@ -185,4 +184,14 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return false;
     }
 
+    public static void main(String args[]){
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        Iterator<Integer> iter1 = ad1.iterator();
+        ad1.addFirst(1);
+        ad1.addLast(1);
+        ad1.printDeque();
+        while (iter1.hasNext()){
+            System.out.println(iter1.next());
+        }
+    }
 }
