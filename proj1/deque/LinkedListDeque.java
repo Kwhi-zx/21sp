@@ -1,8 +1,9 @@
 package deque;
 
 
+import java.util.Iterator;
 
-public class LinkedListDeque<Item> implements Deque<Item>
+public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
 {
     /**
      *  create a Node class for ListDeque
@@ -163,33 +164,85 @@ public class LinkedListDeque<Item> implements Deque<Item>
         return getRecursiveHelper(sentinel.next,index);
     }
 
-//    public Iterator<Item> iterator(){
-//
-//    }
-//
-//    public boolean equals(Object obj){
-//
-//
-//    }
+    public Iterator<Item> iterator(){
+        return new LinkListIterator();
+    }
 
-//    public static void main(String args[])
-//    {
-//
+    private class LinkListIterator implements Iterator<Item>{
+        private IntNode wizSentinel;
+
+        public LinkListIterator(){
+            wizSentinel = sentinel.next;
+        }
+
+        public boolean hasNext(){
+            return wizSentinel != sentinel;
+        }
+
+        public Item next(){
+            Item returnItem = wizSentinel.item;
+            wizSentinel = wizSentinel.next;
+            return returnItem;
+        }
+
+    }
+
+    public boolean equals(Object obj){
+        if(obj instanceof LinkedListDeque lks){
+            if(lks.size != this.size){
+                return false;
+            }
+            IntNode p = this.sentinel.next;
+            IntNode l = lks.sentinel.next;
+            for(int i=0;i<this.size;i++){
+                if(p.item != l.item){
+                    return false;
+                }
+                p = p.next;
+                l = l.next;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    public static void main(String args[])
+    {
+
 //        LinkedListDeque<Integer> noNode = new LinkedListDeque();
-//        LinkedListDeque<Integer> intNode = new LinkedListDeque(5);
-//        intNode.addFirst(3);
-//        intNode.addLast(6);
+//        LinkedListDeque<Integer> noNode1 = new LinkedListDeque();
+        LinkedListDeque<Integer> intNode = new LinkedListDeque(5);
+//        LinkedListDeque<Integer> anotherNode = new LinkedListDeque(5);
+        intNode.addFirst(3);
+        intNode.addLast(6);
+//        anotherNode.addFirst(3);
+//        anotherNode.addLast(6);
+        intNode.printDeque();
+//        System.out.println("intNode size: "+ intNode.size());
+
+//        intNode.removeFirst();
 //        intNode.printDeque();
-////        System.out.println("intNode size: "+ intNode.size());
-//
-////        intNode.removeFirst();
-////        intNode.printDeque();
-//
-////        intNode.removeLast();
-////        intNode.printDeque();
-//
+
+//        intNode.removeLast();
+//        intNode.printDeque();
+
 //        System.out.println(intNode.get(2));
 //        System.out.println(intNode.getRecursive(2));
-//    }
+//            System.out.println("equal? "+ intNode.equals(anotherNode));
+//            System.out.println("equal? "+ noNode.equals(noNode1));
+
+        /**
+         *  iterator test
+         * */
+//        Iterator<Integer>  intIter  = intNode.iterator();
+//        while(intIter.hasNext()){
+//            int i = intIter.next();
+//            System.out.println(i);
+//        }
+        for(int x:intNode){
+            System.out.println(x);
+        }
+    }
 
 }

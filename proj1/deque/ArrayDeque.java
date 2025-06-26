@@ -1,6 +1,8 @@
 package deque;
 
-public class ArrayDeque<Item> implements Deque<Item>{
+import java.util.Iterator;
+
+public class ArrayDeque<Item> implements Deque<Item>,Iterable<Item>{
     private int size;
     private Item[] items;
     private int nextFirst;
@@ -119,10 +121,61 @@ public class ArrayDeque<Item> implements Deque<Item>{
         return items[nextFirst + 1 + index];
     }
 
-//    public static void main(String args[]){
-//        ArrayDeque<Integer> test = new ArrayDeque();
-//        test.addFirst(2);
+    public Iterator<Item> iterator(){
+        return new ArrayDequeIterator();
+    }
+
+    public class ArrayDequeIterator implements Iterator<Item>{
+        private int wizPos;
+
+        public ArrayDequeIterator(){
+            wizPos = 0;
+        }
+
+        public boolean hasNext(){
+            return wizPos < size;
+        }
+        public Item next(){
+            Item returnItem = get(wizPos);
+            wizPos += 1;
+            return returnItem;
+        }
+    }
+
+    public boolean equals(Object obj){
+        if(obj instanceof ArrayDeque ad){
+            if(ad.size != this.size){
+                return false;
+            }
+            for(int i=0;i<this.size;i++){
+                if(ad.get(i) != this.get(i)){
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static void main(String args[]){
+        ArrayDeque<Integer> test = new ArrayDeque();
+//        ArrayDeque<Integer> test1 = new ArrayDeque();
+        test.addFirst(2);
+        test.addLast(3);
+//        test1.addFirst(2);
+//        test1.addLast(3);
+
+        test.printDeque();
+        Iterator<Integer> testIter = test.iterator();
+        while(testIter.hasNext()){
+            int i = testIter.next();
+            System.out.println(i);
+        }
 //        System.out.println(test.get(0));
-//    }
+//        System.out.println("equals? "+ test.equals(test1));
+        for(int x:test){
+            System.out.println(x);
+        }
+    }
 
 }
