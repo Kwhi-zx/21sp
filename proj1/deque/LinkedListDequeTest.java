@@ -224,6 +224,21 @@ public class LinkedListDequeTest {
     }
 
     @Test
+    public void equalsTest3(){
+
+        LinkedListDeque<String> a = new LinkedListDeque<>();
+        LinkedListDeque<String> b = new LinkedListDeque<>();
+        a.addLast("hello");
+        a.addLast("world");
+
+        b.addLast(new String("hello")); // 不同对象但内容相同
+        b.addLast("world");
+
+        assertEquals(true,a.equals(b));
+
+    }
+
+    @Test
     public void sizeTest(){
         LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
         lld1.addLast(0);

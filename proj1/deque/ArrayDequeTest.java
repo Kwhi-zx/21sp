@@ -48,9 +48,15 @@ public class ArrayDequeTest {
         for (int i = 0; i < 1000000; i++) {
             ad1.addLast(i);
         }
-        for(int i = 0; i < 1000000; i++){
-            Assert.assertEquals(Integer.valueOf(i),ad1.get(i));
+        for(int i = 0; i < 500000; i++){
+//            Assert.assertEquals(Integer.valueOf(i),ad1.get(i));
+            assertEquals("Should have the same value", i, (double) ad1.removeFirst(), 0.0);
         }
+
+        for (double i = 999999; i > 500000; i--) {
+            assertEquals("Should have the same value", i, (double) ad1.removeLast(), 0.0);
+        }
+
     }
 
     @Test
@@ -61,7 +67,18 @@ public class ArrayDequeTest {
         Assert.assertEquals(0,ad1.size());
     }
 
-    public void iteratorTest(){
+
+    @Test
+    public void equalTest(){
         ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
+        ArrayDeque<Integer> ad2 = new ArrayDeque<Integer>();
+
+        ad1.addFirst(1);
+        ad1.addLast(2);
+
+        ad2.addFirst(1);
+        ad2.addLast(1);
+
+        Assert.assertEquals(false,ad1.equals(ad2));
     }
 }
