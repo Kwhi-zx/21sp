@@ -136,4 +136,76 @@ public class LinkedListDequeTest {
 
 
     }
+
+    @Test
+    public void getIterTest1(){
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addFirst(2);
+        lld1.addLast(3);
+        lld1.addLast(4);
+        assertEquals("Should have the same value",lld1.get(4),Integer.valueOf(4));
+    }
+    @Test
+    public void getIterTest2(){
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addFirst(2);
+        lld1.addLast(3);
+        lld1.addLast(4);
+        assertEquals("Should have the same value",lld1.get(0),Integer.valueOf(2));
+    }
+
+    @Test
+    public void getRecurTest1(){
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addFirst(2);
+        lld1.addLast(3);
+        lld1.addLast(4);
+        assertEquals("Should have the same value",lld1.getRecursive(4),Integer.valueOf(4));
+    }
+
+    @Test
+    public void getRecurTest2(){
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addFirst(2);
+        lld1.addLast(3);
+        lld1.addLast(4);
+        assertEquals("Should have the same value",lld1.getRecursive(0),Integer.valueOf(2));
+    }
+
+    @Test
+    public void getRecurTest3(){
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        lld1.addLast(1);
+        lld1.removeFirst();
+        lld1.addFirst(3);
+        assertEquals("Should have the same value",lld1.getRecursive(0),Integer.valueOf(3));
+    }
+
+    @Test
+    public void equalsTest1(){
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        LinkedListDeque<Integer> lld2 = new LinkedListDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addFirst(2);
+        lld1.addLast(3);
+        lld1.addLast(4);
+
+        lld2.addLast(0);
+        lld2.addFirst(1);
+        lld2.addFirst(2);
+        lld2.addLast(3);
+        lld2.addLast(4);
+
+        assertEquals(true,lld1.equals(lld2));
+    }
+
 }

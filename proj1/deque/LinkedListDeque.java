@@ -94,7 +94,7 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
             p = p.next;
         }
 
-        if(p!=sentinel){
+        if(p != sentinel){
             System.out.println(p.item);
         }
 
@@ -139,17 +139,18 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
     @Override
     public Item get(int index)
     {
-        IntNode p = sentinel;
-        for(int i=0;i<index;i++)
+        IntNode p = sentinel.next; //index 0
+        for(int i = 0;i < index; i++)
         {
             p = p.next;
         }
         return p.item;
     }
 
+
     private Item getRecursiveHelper(IntNode p,int index)
     {
-        if(index == 1){
+        if(index == 0){
             return p.item;
         }
         return getRecursiveHelper(p.next,index - 1);
@@ -163,6 +164,7 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
         }
         return getRecursiveHelper(sentinel.next,index);
     }
+
 
     public Iterator<Item> iterator(){
         return new LinkListIterator();
@@ -195,7 +197,7 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
             }
             IntNode p = this.sentinel.next;
             IntNode l = (IntNode) lks.sentinel.next;
-            for(int i=0;i<this.size;i++){
+            for(int i = 0;i < this.size; i++){
                 if(p.item != l.item){
                     return false;
                 }
@@ -213,13 +215,13 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
 
 //        LinkedListDeque<Integer> noNode = new LinkedListDeque();
 //        LinkedListDeque<Integer> noNode1 = new LinkedListDeque();
-        LinkedListDeque<Integer> intNode = new LinkedListDeque(5);
-        LinkedListDeque<Integer> anotherNode = new LinkedListDeque(5);
-        intNode.addFirst(3);
-        intNode.addLast(6);
-        anotherNode.addFirst(3);
-        anotherNode.addLast(6);
-        intNode.printDeque();
+//        LinkedListDeque<Integer> intNode = new LinkedListDeque(5);
+//        LinkedListDeque<Integer> anotherNode = new LinkedListDeque(5);
+//        intNode.addFirst(3);
+//        intNode.addLast(6);
+//        anotherNode.addFirst(3);
+//        anotherNode.addLast(6);
+//        intNode.printDeque();
 //        System.out.println("intNode size: "+ intNode.size());
 
 //        intNode.removeFirst();
@@ -230,20 +232,27 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
 
 //        System.out.println(intNode.get(2));
 //        System.out.println(intNode.getRecursive(2));
-            System.out.println("equal? "+ intNode.equals(anotherNode));
-//            System.out.println("equal? "+ noNode.equals(noNode1));
-
-        /**
-         *  iterator test
-         * */
-//        Iterator<Integer>  intIter  = intNode.iterator();
-//        while(intIter.hasNext()){
-//            int i = intIter.next();
-//            System.out.println(i);
+//            System.out.println("equal? "+ intNode.equals(anotherNode));
+////            System.out.println("equal? "+ noNode.equals(noNode1));
+//
+//        /**
+//         *  iterator test
+//         * */
+////        Iterator<Integer>  intIter  = intNode.iterator();
+////        while(intIter.hasNext()){
+////            int i = intIter.next();
+////            System.out.println(i);
+////        }
+//        for(int x:intNode){
+//            System.out.println(x);
 //        }
-        for(int x:intNode){
-            System.out.println(x);
-        }
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addFirst(2);
+        lld1.addLast(3);
+        lld1.addLast(4);
+        lld1.printDeque();
     }
 
 }

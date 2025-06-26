@@ -71,7 +71,7 @@ public class ArrayDeque<Item> implements Deque<Item>,Iterable<Item>{
     @Override
     public void printDeque()
     {
-        for(int i=nextFirst+1;i<nextLast;i++)
+        for(int i = nextFirst+1;i < nextLast; i++)
         {
             if(i == nextLast-1){
                 System.out.println(items[i] + " ");
@@ -84,7 +84,7 @@ public class ArrayDeque<Item> implements Deque<Item>,Iterable<Item>{
     @Override
     public Item removeFirst()
     {
-        if(items.length >=16 && size*4 < items.length){
+        if(items.length >= 16 && size*4 < items.length){
             resize(items.length/4);
         }
 
