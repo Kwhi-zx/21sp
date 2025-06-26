@@ -36,4 +36,18 @@ public class MaxArrayDequeTest {
 //        System.out.println("the max is " + marStr.max());
         Assert.assertEquals("pig",marStr.max());
     }
+
+    @Test
+    public void testSize(){
+        Comparator<Integer> comparator1 =(a, b)->a-b;
+        MaxArrayDeque<Integer> mar = new MaxArrayDeque<>(comparator1);
+        mar.addFirst(1);
+        mar.addFirst(2);
+        mar.addFirst(3);
+        mar.removeFirst();
+        mar.removeFirst();
+        mar.removeFirst();
+        mar.removeFirst();
+        Assert.assertEquals(0,mar.size());
+    }
 }

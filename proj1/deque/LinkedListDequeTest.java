@@ -193,20 +193,49 @@ public class LinkedListDequeTest {
     public void equalsTest1(){
         //LinkedListDeque and ArrayDeques with the same elements should be equal !
         LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
-        ArrayDeque<Integer> lld2 = new ArrayDeque<Integer>();
+        ArrayDeque<Integer> ad2 = new ArrayDeque<Integer>();
         lld1.addLast(0);
         lld1.addFirst(1);
         lld1.addFirst(2);
         lld1.addLast(3);
         lld1.addLast(4);
 
+        ad2.addLast(0);
+        ad2.addFirst(1);
+        ad2.addFirst(2);
+        ad2.addLast(3);
+        ad2.addLast(4);
+
+        assertEquals(true,lld1.equals(ad2));
+    }
+
+    @Test
+    public void equalsTest2(){
+        //LinkedListDeque and ArrayDeques with the same elements should be equal !
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        LinkedListDeque<Integer> lld2 = new LinkedListDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+
         lld2.addLast(0);
         lld2.addFirst(1);
-        lld2.addFirst(2);
-        lld2.addLast(3);
-        lld2.addLast(4);
 
         assertEquals(true,lld1.equals(lld2));
+    }
+
+    @Test
+    public void sizeTest(){
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addFirst(2);
+
+        lld1.removeFirst();
+        lld1.removeFirst();
+        lld1.removeFirst();
+        lld1.removeFirst();
+
+        System.out.println(lld1.size());
     }
 
 

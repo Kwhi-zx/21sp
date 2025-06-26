@@ -2,30 +2,28 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<Item> implements Deque<Item>, Iterable<Item>{
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int size;
-    private Item[] items;
+    private T[] items;
     private int nextFirst;
     private int nextLast;
 
     //Creates an empty array deque.
-    public ArrayDeque()
-    {
+    public ArrayDeque() {
         size = 0;
-        items = (Item[]) new Object[8]; //The starting size of your array should be 8.
+        items = (T[]) new Object[8]; //The starting size of your array should be 8.
         nextFirst = 4; // |0|1|2|3|4|5|6|7|  8/2 = 4
         nextLast = 5;
     }
 
-    private void resize(int capacity)
-    {
-        Item[] temp = (Item[]) new Object[capacity];
+    private void resize(int capacity) {
+        T[] temp = (T[]) new Object[capacity];
         int iterTime = size;
         int i = 1;
         int tempPos = capacity / 2 - size / 2;
         int itemPos;
         // linear the old data
-        while(iterTime != 0){
+        while(iterTime != 0) {
             itemPos = (nextFirst + i + items.length) % items.length;
             temp[tempPos] = items[itemPos];
             iterTime--;
@@ -38,7 +36,7 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable<Item>{
     }
 
     @Override
-    public void addFirst(Item item)
+    public void addFirst(T item)
     {
         if(size == items.length){
             resize(size * 2);
@@ -49,7 +47,7 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable<Item>{
     }
 
     @Override
-    public void addLast(Item item)
+    public void addLast(T item)
     {
         if(size == items.length){
             resize(size*2);
@@ -91,14 +89,17 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable<Item>{
     }
 
     @Override
-    public Item removeFirst()
+    public T removeFirst()
     {
         if(items.length >= 16 && size*4 < items.length){
             resize(items.length/4);
         }
+        if(size == 0){
+            return null;
+        }
 
         nextFirst = (nextFirst + 1 + items.length) % items.length;
-        Item res = items[nextFirst];
+        T res = items[nextFirst];
         items[nextFirst] = null;    //remove the First item
         size -=1;
         return res;  //return the removed's next item
@@ -107,14 +108,18 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable<Item>{
     }
 
     @Override
-    public Item removeLast(){
+    public T removeLast(){
         //resize
         if(items.length >=16 && size*4 < items.length){
             resize(items.length/4);
         }
 
+        if(size == 0){
+            return null;
+        }
+
         nextLast = (nextLast - 1 + items.length) % items.length;
-        Item res = items[nextLast];
+        T res = items[nextLast];
         items[nextLast] = null;
         size -= 1;
         return res;
@@ -122,16 +127,16 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable<Item>{
 
 
     @Override
-    public Item get(int index){
+    public T get(int index){
         int indexPos = (nextFirst + 1 + index + items.length) % items.length;
         return items[indexPos];
     }
 
-    public Iterator<Item> iterator(){
+    public Iterator<T> iterator(){
         return new ArrayDequeIterator();
     }
 
-    public class ArrayDequeIterator implements Iterator<Item>{
+    public class ArrayDequeIterator implements Iterator<T>{
         private int wizPos;
 
         public ArrayDequeIterator(){
@@ -141,8 +146,8 @@ public class ArrayDeque<Item> implements Deque<Item>, Iterable<Item>{
         public boolean hasNext(){
             return wizPos < size;
         }
-        public Item next(){
-            Item returnItem = get(wizPos);
+        public T next(){
+            T returnItem = get(wizPos);
 //            wizPos += 1;
             wizPos = (wizPos + 1 + items.length) % items.length;
             return returnItem;

@@ -1,5 +1,6 @@
 package deque;
 
+import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -50,5 +51,13 @@ public class ArrayDequeTest {
         for(int i = 0; i < 200; i++){
             System.out.println(":  "+ ad1.get(i));
         }
+    }
+
+    @Test
+    public void sizeTest(){
+        ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
+        ad1.removeFirst();
+//        System.out.println(ad1.size());
+        Assert.assertEquals(0,ad1.size());
     }
 }
