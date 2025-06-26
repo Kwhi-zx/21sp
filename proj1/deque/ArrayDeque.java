@@ -142,14 +142,29 @@ public class ArrayDeque<Item> implements Deque<Item>,Iterable<Item>{
         }
     }
 
+//    public boolean equals(Object obj){
+//        if(obj instanceof ArrayDeque){
+//            ArrayDeque<?> ad = (ArrayDeque<?>) obj;
+//            if(ad.size != this.size){
+//                return false;
+//            }
+//            for(int i=0;i<this.size;i++){
+//                if(ad.get(i) != this.get(i)){
+//                    return false;
+//                }
+//            }
+//            return true;
+//        }
+//        return false;
+//    }
     public boolean equals(Object obj){
-        if(obj instanceof ArrayDeque){
-            ArrayDeque<?> ad = (ArrayDeque<?>) obj;
-            if(ad.size != this.size){
+        if(obj instanceof Deque){
+            Deque<?> deque = (Deque<?>) obj;
+            if(this.size != deque.size()){
                 return false;
             }
             for(int i=0;i<this.size;i++){
-                if(ad.get(i) != this.get(i)){
+                if(this.get(i) != deque.get(i)){
                     return false;
                 }
             }

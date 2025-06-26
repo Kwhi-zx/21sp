@@ -191,8 +191,9 @@ public class LinkedListDequeTest {
 
     @Test
     public void equalsTest1(){
+        //LinkedListDeque and ArrayDeques with the same elements should be equal !
         LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
-        LinkedListDeque<Integer> lld2 = new LinkedListDeque<Integer>();
+        ArrayDeque<Integer> lld2 = new ArrayDeque<Integer>();
         lld1.addLast(0);
         lld1.addFirst(1);
         lld1.addFirst(2);

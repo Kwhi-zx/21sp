@@ -189,22 +189,37 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
 
     }
 
+//    public boolean equals(Object obj){
+//        if(obj instanceof LinkedListDeque){
+//            LinkedListDeque<?> lks = (LinkedListDeque<?>) obj;
+//            if(lks.size != this.size){
+//                return false;
+//            }
+//            IntNode p = this.sentinel.next;
+//            IntNode l = (IntNode) lks.sentinel.next;
+//            for(int i = 0;i < this.size; i++){
+//                if(p.item != l.item){
+//                    return false;
+//                }
+//                p = p.next;
+//                l = l.next;
+//            }
+//
+//            return true;
+//        }
+//        return false;
+//    }
     public boolean equals(Object obj){
-        if(obj instanceof LinkedListDeque){
-            LinkedListDeque<?> lks = (LinkedListDeque<?>) obj;
-            if(lks.size != this.size){
+        if(obj instanceof Deque){
+            Deque<?> deque = (Deque<?>) obj;
+            if(this.size != deque.size()){
                 return false;
             }
-            IntNode p = this.sentinel.next;
-            IntNode l = (IntNode) lks.sentinel.next;
-            for(int i = 0;i < this.size; i++){
-                if(p.item != l.item){
+            for(int i=0;i<this.size;i++){
+                if(this.get(i) != deque.get(i)){
                     return false;
                 }
-                p = p.next;
-                l = l.next;
             }
-
             return true;
         }
         return false;
