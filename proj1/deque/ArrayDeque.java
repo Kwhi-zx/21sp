@@ -143,7 +143,8 @@ public class ArrayDeque<Item> implements Deque<Item>,Iterable<Item>{
     }
 
     public boolean equals(Object obj){
-        if(obj instanceof ArrayDeque ad){
+        if(obj instanceof ArrayDeque){
+            ArrayDeque<?> ad = (ArrayDeque<?>) obj;
             if(ad.size != this.size){
                 return false;
             }
@@ -159,11 +160,11 @@ public class ArrayDeque<Item> implements Deque<Item>,Iterable<Item>{
 
     public static void main(String args[]){
         ArrayDeque<Integer> test = new ArrayDeque();
-//        ArrayDeque<Integer> test1 = new ArrayDeque();
+        ArrayDeque<Integer> test1 = new ArrayDeque();
         test.addFirst(2);
         test.addLast(3);
-//        test1.addFirst(2);
-//        test1.addLast(3);
+        test1.addFirst(2);
+        test1.addLast(3);
 
         test.printDeque();
         Iterator<Integer> testIter = test.iterator();
@@ -172,7 +173,7 @@ public class ArrayDeque<Item> implements Deque<Item>,Iterable<Item>{
             System.out.println(i);
         }
 //        System.out.println(test.get(0));
-//        System.out.println("equals? "+ test.equals(test1));
+        System.out.println("equals? "+ test.equals(test1));
         for(int x:test){
             System.out.println(x);
         }

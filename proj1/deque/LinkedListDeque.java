@@ -188,12 +188,13 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
     }
 
     public boolean equals(Object obj){
-        if(obj instanceof LinkedListDeque lks){
+        if(obj instanceof LinkedListDeque){
+            LinkedListDeque<?> lks = (LinkedListDeque<?>) obj;
             if(lks.size != this.size){
                 return false;
             }
             IntNode p = this.sentinel.next;
-            IntNode l = lks.sentinel.next;
+            IntNode l = (IntNode) lks.sentinel.next;
             for(int i=0;i<this.size;i++){
                 if(p.item != l.item){
                     return false;
@@ -213,11 +214,11 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
 //        LinkedListDeque<Integer> noNode = new LinkedListDeque();
 //        LinkedListDeque<Integer> noNode1 = new LinkedListDeque();
         LinkedListDeque<Integer> intNode = new LinkedListDeque(5);
-//        LinkedListDeque<Integer> anotherNode = new LinkedListDeque(5);
+        LinkedListDeque<Integer> anotherNode = new LinkedListDeque(5);
         intNode.addFirst(3);
         intNode.addLast(6);
-//        anotherNode.addFirst(3);
-//        anotherNode.addLast(6);
+        anotherNode.addFirst(3);
+        anotherNode.addLast(6);
         intNode.printDeque();
 //        System.out.println("intNode size: "+ intNode.size());
 
@@ -229,7 +230,7 @@ public class LinkedListDeque<Item> implements Deque<Item> ,Iterable<Item>
 
 //        System.out.println(intNode.get(2));
 //        System.out.println(intNode.getRecursive(2));
-//            System.out.println("equal? "+ intNode.equals(anotherNode));
+            System.out.println("equal? "+ intNode.equals(anotherNode));
 //            System.out.println("equal? "+ noNode.equals(noNode1));
 
         /**
