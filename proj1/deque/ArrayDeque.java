@@ -99,7 +99,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             return null;
         }
 
-        nextFirst = (nextFirst + 1 + items.length) % items.length;
+//        nextFirst = (nextFirst + 1 + items.length) % items.length;
+        nextFirst = (nextFirst + 1) % items.length;
         T res = items[nextFirst];
         items[nextFirst] = null;    //remove the First item
         size -=1;
