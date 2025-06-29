@@ -24,7 +24,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         int tempPos = capacity / 2 - size / 2;
         int itemPos;
         // linear the old data
-        while(iterTime != 0) {
+        while (iterTime != 0) {
 //            itemPos = (nextFirst + i + items.length) % items.length;
             itemPos = (nextFirst + i) % items.length;
             temp[tempPos] = items[itemPos];
@@ -39,9 +39,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
 
     @Override
-    public void addFirst(T item)
-    {
-        if(size == items.length){
+    public void addFirst(T item) {
+        if (size == items.length) {
             resize(size * 2);
         }
         items[nextFirst] = item;
@@ -50,9 +49,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     @Override
-    public void addLast(T item)
-    {
-        if(size == items.length){
+    public void addLast(T item) {
+        if (size == items.length) {
             resize(size*2);
         }
 
@@ -72,18 +70,15 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 //    }
 
     @Override
-    public int size()
-    {
+    public int size() {
         return size;
     }
 
     @Override
-    public void printDeque()
-    {
+    public void printDeque() {
         int index;
         int i;
-        for(i=1;i<size;i++)
-        {
+        for(i = 1; i < size; i++) {
             index = (nextFirst + i + items.length) % items.length;
             System.out.print(items[index] + " ");
         }
@@ -92,9 +87,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     @Override
-    public T removeFirst()
-    {
-        if(size == 0){
+    public T removeFirst() {
+        if(size == 0) {
             return null;
         }
 //        nextFirst = (nextFirst + 1 + items.length) % items.length;
@@ -104,16 +98,16 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         size -=1;
 
 
-        if(items.length >= 16 && size < items.length / 4){
-            resize(items.length/2);
+        if(items.length >= 16 && size < items.length / 4) {
+            resize(items.length / 2);
         }
 
         return res;  //return the removed's next item
     }
 
     @Override
-    public T removeLast(){
-        if(size == 0){
+    public T removeLast() {
+        if(size == 0) {
             return null;
         }
 
@@ -123,7 +117,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         size -= 1;
 
         if(items.length >=16 && size < items.length / 4){
-            resize(items.length/2);
+            resize(items.length / 2);
         }
 
         return res;
@@ -131,27 +125,27 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
 
     @Override
-    public T get(int index){
+    public T get(int index) {
 //        int indexPos = (nextFirst + 1 + index + items.length) % items.length;
         int indexPos = (nextFirst + 1 + index) % items.length;
         return items[indexPos];
     }
 
-    public Iterator<T> iterator(){
+    public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }
 
-    private class ArrayDequeIterator implements Iterator<T>{
+    private class ArrayDequeIterator implements Iterator<T> {
         private int wizPos;
 
-        public ArrayDequeIterator(){
+        public ArrayDequeIterator() {
             wizPos = 0;
         }
 
-        public boolean hasNext(){
+        public boolean hasNext() {
             return wizPos < size;
         }
-        public T next(){
+        public T next() {
             T returnItem = get(wizPos);
             wizPos += 1;
             return returnItem;
@@ -173,16 +167,15 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 //        }
 //        return false;
 //    }
-    public boolean equals(Object obj){
+    public boolean equals(Object obj) {
         if(obj instanceof Deque){
             Deque<?> deque = (Deque<?>) obj;
-            if(this.size != deque.size()){
+            if(this.size != deque.size()) {
                 return false;
             }
-            for(int i=0;i<this.size;i++){
-                if(!Objects.equals(this.get(i),deque.get(i)))
+            for(int i=0 ; i < this.size ; i++) {
 //                if(this.get(i) != deque.get(i))
-                {
+                if(!Objects.equals(this.get(i),deque.get(i))) {
                     return false;
                 }
             }
