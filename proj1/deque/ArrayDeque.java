@@ -104,13 +104,11 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         size -=1;
 
 
-        if(items.length >= 16 && size*4 < items.length){
+        if(items.length >= 16 && size < items.length / 4){
             resize(items.length/2);
         }
 
         return res;  //return the removed's next item
-
-
     }
 
     @Override
@@ -124,7 +122,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items[nextLast] = null;
         size -= 1;
 
-        if(items.length >=16 && size*4 < items.length){
+        if(items.length >=16 && size < items.length / 4){
             resize(items.length/2);
         }
 
