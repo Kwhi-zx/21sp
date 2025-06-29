@@ -107,4 +107,23 @@ public class ArrayDequeTest {
         Assert.assertEquals(false,ad1.equals(ad2));
 
     }
+
+    @Test
+    public void complexTest(){
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        ad1.addLast(1);
+        ad1.addLast(2);
+        ad1.addLast(3);
+        ad1.addLast(4);
+        ad1.addLast(5);
+        ad1.addLast(6);
+        ad1.addLast(7);
+        ad1.addLast(8);
+        ad1.addLast(9);
+        ad1.addLast(10);
+        ad1.removeLast();
+        Assert.assertEquals(9,ad1.size());
+        Assert.assertEquals(Integer.valueOf(1),ad1.get(0));
+
+    }
 }
