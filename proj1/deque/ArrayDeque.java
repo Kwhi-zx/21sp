@@ -25,7 +25,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         int itemPos;
         // linear the old data
         while(iterTime != 0) {
-            itemPos = (nextFirst + i + items.length) % items.length;
+//            itemPos = (nextFirst + i + items.length) % items.length;
+            itemPos = (nextFirst + i) % items.length;
             temp[tempPos] = items[itemPos];
             iterTime--;
             i++;
