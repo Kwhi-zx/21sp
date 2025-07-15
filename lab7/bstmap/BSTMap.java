@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
-    BSTNode root;   // root of the BSTMap
+    private BSTNode root;   // root of the BSTMap
     private class BSTNode {
         private K key;
         private V value;
@@ -97,7 +97,18 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
 
     public V remove(K key) {
         throw new UnsupportedOperationException("remove not support");
+//        if(key == null) throw new IllegalArgumentException("calls remove() with a null key");
+//        if(!containsKey(key)) return null;
+//
+
     }
+//
+//    private BSTNode remove(BSTNode x, K key) {
+//        if(x == null) return null;
+//
+//        int cmp = x.key.compareTo(key);
+//
+//    }
 
     public V remove(K key, V value) {
         throw new UnsupportedOperationException("remove not support");
@@ -120,14 +131,17 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
         printInOrder(x.right);
     }
 
-//    public static void main(String args[]) {
-//        BSTMap<String, Integer> b = new BSTMap<String, Integer>();
-//        b.put("bee",null);
-//        b.put("ant", null);
-//        b.put("cat",null);
-//        b.put("dog",null);
-//        b.printInOrder();
-//    }
+    public static void main(String args[]) {
+        BSTMap<String, Integer> b = new BSTMap<String, Integer>();
+        b.put("bee",2);
+        b.put("ant", 3);
+        b.put("cat",1);
+        b.put("dog",8);
+        b.printInOrder();
+        Integer x = b.remove("cat");
+        b.printInOrder();
+        System.out.println(x);
+    }
 
 
 

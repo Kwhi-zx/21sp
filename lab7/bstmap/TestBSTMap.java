@@ -87,4 +87,21 @@ public class TestBSTMap {
         assertTrue(b.containsKey("hi"));
     }
 
+//    @Test
+//    public void removeTest1() {
+//        BSTMap<String, Integer> b = new BSTMap<String, Integer>();
+//        b.put("bee",2);
+//        b.put("ant", 3);
+//        b.put("cat",1);
+//        b.put("dog",8);
+//        Integer x = b.remove("cat");
+//        assertEquals(x,Integer.valueOf(1));
+//        assertTrue(b.containsKey("bee") && b.get("bee") != null);
+//        assertTrue(b.containsKey("ant") && b.get("ant") != null);
+//        assertTrue(b.containsKey("dog") && b.get("dog") != null);
+//        assertFalse(b.containsKey("cat"));
+//
+//
+//    }
+
 }
