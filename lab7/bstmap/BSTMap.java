@@ -128,14 +128,19 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
             x.key = successor.key;
             x.right = remove(x.right, successor.key); // remove the successor
         }
+        x.size = size(x.left) + size(x.right) + 1;
         return x;
     }
 
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException("remove not support");
-//        if(key == null) throw new IllegalArgumentException("calls remove() with a null key");
-//        if(!containsKey(key)) return null;
-//        if(get(key) != value) throw new IllegalArgumentException("calls remove() with a wrong key-value");
+//        throw new UnsupportedOperationException("remove not support");
+        if(key == null) throw new IllegalArgumentException("calls remove() with a null key");
+        if(!containsKey(key)) return null;
+        if(get(key) != value) throw new IllegalArgumentException("calls remove() with a wrong key-value");
+
+        V removeVal = get(key);
+        this.root = remove(this.root, key);
+        return removeVal;
     }
 
     private BSTNode findMin(BSTNode x) {
@@ -166,8 +171,12 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
         b.put("ant", 3);
         b.put("cat",1);
         b.put("dog",8);
+        b.put("elephant",21);
+        b.put("pig",30);
+        b.put("monkey",40);
         b.printInOrder();
-        Integer x = b.remove("cat");
+        Integer x = b.remove("dog");
+//        Integer x = b.remove("cat",1);
         b.printInOrder();
         System.out.println(b.size());
         System.out.println(x);
