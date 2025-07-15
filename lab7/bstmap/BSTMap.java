@@ -131,17 +131,17 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
         printInOrder(x.right);
     }
 
-    public static void main(String args[]) {
-        BSTMap<String, Integer> b = new BSTMap<String, Integer>();
-        b.put("bee",2);
-        b.put("ant", 3);
-        b.put("cat",1);
-        b.put("dog",8);
-        b.printInOrder();
-        Integer x = b.remove("cat");
-        b.printInOrder();
-        System.out.println(x);
-    }
+//    public static void main(String args[]) {
+//        BSTMap<String, Integer> b = new BSTMap<String, Integer>();
+//        b.put("bee",2);
+//        b.put("ant", 3);
+//        b.put("cat",1);
+//        b.put("dog",8);
+//        b.printInOrder();
+//        Integer x = b.remove("cat");
+//        b.printInOrder();
+//        System.out.println(x);
+//    }
 
 
 
