@@ -1,11 +1,7 @@
 package bstmap;
 
-import edu.princeton.cs.algs4.BST;
-import net.sf.saxon.functions.NamespaceUri_1;
-import org.junit.Test;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
