@@ -1,6 +1,7 @@
 package bstmap;
 
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -91,7 +92,20 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
     }
 
     public Set<K> keySet() {
-        throw new UnsupportedOperationException("keySet not support");
+//        throw new UnsupportedOperationException("keySet not support");
+        Set<K> keyset = new HashSet<>();
+        // object inference
+        keySet(this.root,keyset);
+        return keyset;
+    }
+
+    private Set<K> keySet(BSTNode x,Set<K> ks) {
+        if(x == null) return null;
+
+        keySet(x.left,ks);
+        ks.add(x.key);
+        keySet(x.right,ks);
+        return ks;
     }
 
     // remove problem has 3 cases:
@@ -153,6 +167,7 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
         throw new UnsupportedOperationException("iterator not support");
     }
 
+
     public void printInOrder() {
         printInOrder(this.root);
     }
@@ -165,22 +180,24 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
         printInOrder(x.right);
     }
 
-    public static void main(String args[]) {
-        BSTMap<String, Integer> b = new BSTMap<String, Integer>();
-        b.put("bee",2);
-        b.put("ant", 3);
-        b.put("cat",1);
-        b.put("dog",8);
-        b.put("elephant",21);
-        b.put("pig",30);
-        b.put("monkey",40);
-        b.printInOrder();
-        Integer x = b.remove("dog");
-//        Integer x = b.remove("cat",1);
-        b.printInOrder();
-        System.out.println(b.size());
-        System.out.println(x);
-    }
+//    public static void main(String args[]) {
+//        BSTMap<String, Integer> b = new BSTMap<String, Integer>();
+//        Set<String> ks;
+//        b.put("bee",2);
+//        b.put("ant", 3);
+//        b.put("cat",1);
+//        b.put("dog",8);
+//        b.put("elephant",21);
+//        b.put("pig",30);
+//        b.put("monkey",40);
+//        b.printInOrder();
+//        System.out.println("keyset: "+b.keySet());
+////        Integer x = b.remove("dog");
+////        Integer x = b.remove("cat",1);
+////        b.printInOrder();
+////        System.out.println(b.size());
+////        System.out.println(x);
+//    }
 
 
 
