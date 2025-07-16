@@ -4,6 +4,7 @@ package bstmap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Stack;
 
 public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
     private BSTNode root;   // root of the BSTMap
@@ -162,9 +163,40 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
         return x;
     }
 
+    // iterator() --> helped by ChatGpt
     public Iterator<K> iterator() {
-//        return null;
-        throw new UnsupportedOperationException("iterator not support");
+//        throw new UnsupportedOperationException("iterator not support");
+        return new BSTMapIterator();
+    }
+
+    private class BSTMapIterator implements Iterator<K> {
+        private Stack<BSTNode> stack;
+
+        public BSTMapIterator() {
+            stack = new Stack<>();
+            pushLeft(root);
+        }
+
+        private void pushLeft(BSTNode x) {
+            while(x != null) {
+                stack.push(x);
+                x = x.left;
+            }
+        }
+
+        public boolean hasNext() {
+            return !stack.isEmpty();
+        }
+
+        public K next() {
+            BSTNode node = stack.pop();
+            K key = node.key;
+            // inorder traversal
+            if(node.right != null) {
+                pushLeft(node.right);
+            }
+            return key;
+        }
     }
 
 
@@ -197,6 +229,9 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V> {
 ////        b.printInOrder();
 ////        System.out.println(b.size());
 ////        System.out.println(x);
+//        for(String x : b) {
+//            System.out.println(x);
+//        }
 //    }
 
 
