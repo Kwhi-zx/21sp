@@ -37,7 +37,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private Collection<Node>[] buckets;
     // You should probably define some more!
     private int kvSize;    // number of key-value pairs
-    private int bucketNum; // number of  hash table
+//    private int bucketNum; // number of  hash table
     private double maxLoadFactor;
 
     /** Constructors */
@@ -61,7 +61,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         this.buckets = createTable(initialSize);
         this.kvSize = 0;
         this.maxLoadFactor = maxLoad;
-        bucketNum = initialSize;
+//        bucketNum = initialSize;
     }
 
     /**
@@ -165,7 +165,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     *   Key Dup(键重复): some key has exits
     * */
     public void put(K key,V value) {
-        int bucketIndex = Math.floorMod(key.hashCode(),bucketNum);// 使用模 hashcode可能是正、负;并且该数可能不在索引范围内
+        int bucketIndex = Math.floorMod(key.hashCode(), buckets.length);// 使用模 hashcode可能是正、负;并且该数可能不在索引范围内
         Collection<Node> bucket = buckets[bucketIndex];
         Node newPair = new Node(key,value);
         if(bucket == null) {
@@ -192,8 +192,8 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             }
         }
 
-        if((double) kvSize / bucketNum > maxLoadFactor) {
-            resize(bucketNum*2);
+        if((double) kvSize / buckets.length > maxLoadFactor) {
+            resize(buckets.length*2);
         }
     }
 
@@ -269,23 +269,54 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         return new MyHashMapIterator();
     }
 
+//    private class MyHashMapIterator implements Iterator<K> {
+//        private Deque<Node> deque;
+//        public MyHashMapIterator() {
+//            deque = new ArrayDeque<>();
+//            for(Collection<Node> bucket:buckets) {
+//                if(bucket == null) {
+//                    continue;
+//                }
+//                for(Node node:bucket) {
+//                    deque.addFirst(node);
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public boolean hasNext() {
+//            return !deque.isEmpty();
+//        }
+//
+//        @Override
+//        public K next() {
+//            if(!hasNext()) {
+//                throw new NoSuchElementException("No more elements in the map.");
+//            }
+//            Node firstNode = deque.removeFirst();
+//            return firstNode.key;
+//        }
+//    }
+
+    /*
+        Lazy Iterator by Gemini
+    */
     private class MyHashMapIterator implements Iterator<K> {
-        private Deque<Node> deque;
+        private int curBucketIdx; // 指示遍历到哪个bucket
+        private Iterator<Node> curBucketIter; // 用于遍历当前bucket中的Node
+
         public MyHashMapIterator() {
-            deque = new ArrayDeque<>();
-            for(Collection<Node> bucket:buckets) {
-                if(bucket == null) {
-                    continue;
-                }
-                for(Node node:bucket) {
-                    deque.addFirst(node);
-                }
-            }
+            curBucketIdx = 0;
+            curBucketIter = null;
+            // Find the first valid node to start
+            findNextValidNode();
+
         }
 
         @Override
         public boolean hasNext() {
-            return !deque.isEmpty();
+            // We have a next element if the current iterator exists and has a next element.
+            return curBucketIter != null && curBucketIter.hasNext();
         }
 
         @Override
@@ -293,9 +324,37 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             if(!hasNext()) {
                 throw new NoSuchElementException("No more elements in the map.");
             }
-            Node firstNode = deque.removeFirst();
-            return firstNode.key;
+            // Get the next node from the current bucket's iterator
+            Node nextNode = curBucketIter.next();
+            // find the next available node to prepare for the next call to hasNext()/next()
+            findNextValidNode();
+            return nextNode.key;
+        }
+
+        private void findNextValidNode() {
+            // already exist
+            // 当前 bucket 还有 node，不需要换
+            if(curBucketIter != null && curBucketIter.hasNext()) {
+                return;
+            }
+
+            // otherwise
+            while(curBucketIdx < buckets.length) {
+                Collection<Node> bucket = buckets[curBucketIdx];
+                if(bucket != null && !bucket.isEmpty()) {
+                    this.curBucketIter = bucket.iterator();
+                    return;
+                }
+                curBucketIdx++;
+            }
+
+            this.curBucketIter = null;
         }
     }
-    
+
+
+
+
+
+
 }
