@@ -4,6 +4,8 @@ import org.apache.commons.collections.FastArrayList;
 
 import java.util.*;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  *  A hash table-backed Map implementation. Provides amortized constant time
  *  access to elements via get(), remove(), and put() in the best case.
@@ -195,7 +197,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         }
     }
 
-    public void resize(int capacity) {
+    private void resize(int capacity) {
         Collection<Node>[] newBuckets = createTable(capacity);
         for(Collection<Node> bucket:buckets) {
             if(bucket == null) {
@@ -237,6 +239,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
                     removedvalue = node.value;
                     bucket.remove(node);
                     kvSize -= 1;
+                    return removedvalue;
                 }
             }
         }
@@ -254,6 +257,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
                     removedvalue = node.value;
                     bucket.remove(node);
                     kvSize -= 1;
+                    return removedvalue;
                 }
             }
         }
@@ -293,5 +297,5 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             return firstNode.key;
         }
     }
-
+    
 }
