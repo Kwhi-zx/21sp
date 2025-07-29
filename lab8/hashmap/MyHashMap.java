@@ -1,13 +1,15 @@
 package hashmap;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  *  A hash table-backed Map implementation. Provides amortized constant time
  *  access to elements via get(), remove(), and put() in the best case.
  *
  *  Assumes null keys will never be inserted, and does not resize down upon remove().
- *  @author YOUR NAME HERE
+ *  @author 
  */
 public class MyHashMap<K, V> implements Map61B<K, V> {
 
@@ -87,5 +89,46 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     // TODO: Implement the methods of the Map61B Interface below
     // Your code won't compile until you do so!
+
+    public void clear() {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+    public boolean containsKey(K key) {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+
+    public V get(K key) {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+
+    public int size() {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+
+    public void put(K key, V value) {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+    public Set<K> keySet() {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+
+    public V remove(K key) {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+
+    public V remove(K key, V value) {
+        throw new UnsupportedOperationException("iterator not support");
+    }
+
+    public Iterator<K> iterator() {
+        throw new UnsupportedOperationException("iterator not support");
+    }
 
 }
