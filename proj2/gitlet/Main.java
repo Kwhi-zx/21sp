@@ -1,7 +1,9 @@
 package gitlet;
 
+import java.io.File;
+
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+ *  @author wzx
  */
 public class Main {
 
@@ -9,16 +11,54 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) {
-        // TODO: what if args is empty?
+        // if args is empty
+        if(args.length == 0) {
+            System.out.println("Please enter a command.");
+            System.exit(0);
+        }
         String firstArg = args[0];
+        Repository repo = new Repository();
+        // create an instance
         switch(firstArg) {
-            case "init":
-                // TODO: handle the `init` command
+            case "init": {
+                repo.initCommand();
                 break;
-            case "add":
-                // TODO: handle the `add [filename]` command
+            }
+            case "add": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please enter a File name");
+                    System.exit(0);
+                }
+                String filePath = args[1];
+                File addedFile = new File(filePath);
+                repo.addCommand(addedFile);
                 break;
-            // TODO: FILL THE REST IN
+            }
+            case "commit":
+                break;
+            case "rm":
+                break;
+            case "log":
+                break;
+            case "global-log":
+                break;
+            case "find":
+                break;
+            case "status":
+                break;
+            case "checkout":
+                break;
+            case "branch":
+                break;
+            case "rm-branch":
+                break;
+            case "reset":
+                break;
+            case "merge":
+                break;
+            default:
+                System.out.println("No such a command.");
+                System.exit(0);
         }
     }
 }
