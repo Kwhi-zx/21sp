@@ -64,8 +64,8 @@ public class Commit implements Serializable {
         this.parent = parent;
     }
     // ?
-    public void setFilesandBlob(File f,Objects obj) {
-        this.filesandBlob.put(f,obj);
-    }
+//    public void setFilesandBlob(File f,Objects obj) {
+//        this.filesandBlob.put(f,obj);
+//    }
 
 }
