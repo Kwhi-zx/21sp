@@ -1,13 +1,14 @@
 package gitlet;
 
+import net.sf.saxon.trans.SymbolicName;
+
 import java.io.File;
-import java.util.Objects;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.io.IOException;
 
 /** Represents a gitlet repository.
@@ -35,9 +36,14 @@ public class Repository {
     public static final File OBJECTS = join(GITLET_DIR,"objects");
     /** The staging area*/
     public static final File STAGING_AREA = join(GITLET_DIR,"index");
-    /** storing HEAD and master*/
+
+    /** The staging area for removal*/
+    public static final File REMOVE_INDEX = join(GITLET_DIR,"rm_index");
+
+    /** storing  master*/
     public static final File REFS = join(GITLET_DIR,"refs");
     public static final File Heads = join(REFS,"heads");
+    /** HEAD*/
     public static final File HEAD = join(GITLET_DIR,"HEAD");
 
 
@@ -69,6 +75,7 @@ public class Repository {
         // create file
         try {
             STAGING_AREA.createNewFile();
+            REMOVE_INDEX.createNewFile();
             HEAD.createNewFile(); // where the HEAD pointer --> storing a path
         }catch (IOException e) {
             e.printStackTrace();
@@ -77,13 +84,14 @@ public class Repository {
         File headFile = join(Heads,"master");
         // .git/HEAD
         // TODO: relativaly Path ?
-        writeContents(HEAD,"ref: refs/heads/master"); // "yeah,the HEAD pointer --->" ref: refs/heads/master
+        writeContents(HEAD,"refs/heads/master"); // "yeah,the HEAD pointer --->" ref: refs/heads/master
 
         // initail the commit message
         Commit initCommit = new Commit();
         byte[] serializedCommit = Utils.serialize(initCommit); // serialize the Commit for the sha1
 
         String hashCode = Utils.sha1(serializedCommit);
+
         // refs/heads/master --> master branch
         Utils.writeContents(headFile,hashCode);
 
@@ -157,22 +165,128 @@ public class Repository {
         Utils.writeObject(STAGING_AREA,serializedStagingInfo); // overwrites
     }
 
-    /**
-     *
-     *
-     * */
+    @SuppressWarnings("unchecked")
     public void commitCommand(String msg) {
-        //TODO: .git/objects
+        Commit newCommit = new Commit();
 
+        // set timeStamp and message  --> MetaData
+        Date date = new Date(); // real time
+        newCommit.setTimestamp(date);
+        newCommit.setMessage(msg);
+        // set parent --> parent
+        // parent Commit
+        // inherent from parent
+        String parentCommitHash = getHeadHashCode();
+        File parentContentFile = getHashFile(OBJECTS,parentCommitHash);
+        Commit parentCommit = readObject(parentContentFile,Commit.class);
 
-        //TODO: .git/index
+        newCommit.setParent(parentCommitHash);
+        newCommit.setFilesandBlob(parentCommit.getFilesCommitBlob());
 
-        //TODO: .git/HEAD
+        // .git/index
+        // TODO: rm
+        if(STAGING_AREA.length() == 0) {
+            // if staging area is empty
+            System.out.println("Everything up-to-date!");
+            System.exit(0);
+        }
+
+        // refresh the inherentHashMap
+        HashMap<String,String> newStagingInfo = new HashMap<>();
+        HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
+        newStagingInfo = readObject(STAGING_AREA,HashMap.class);
+        for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
+            // go through the STAGING AREA and overwrite
+            String filePath = entry.getKey();
+            String fileHashCode = entry.getValue();
+            inherentHashMap.put(filePath,fileHashCode); // overwrite
+        }
+
+        // .git/objects --> store the newCommit
+        byte[] serializedNewCommit = Utils.serialize(newCommit);
+        String newCommitHashcode = Utils.sha1(serializedNewCommit);
+        String newCommitHashDirName = newCommitHashcode.substring(0,2); // get first 2 chars for the file name
+        String newCommitHashFileName = newCommitHashcode.substring(2);
+        // .git/objects/xx
+        File newCommitHashFileDir = join(OBJECTS,newCommitHashDirName);
+        if (!newCommitHashFileDir.exists()) {
+            newCommitHashFileDir.mkdir();
+        }
+        // .git/objects/xx/...
+        File newCommitHashFile = join(newCommitHashFileDir,newCommitHashFileName);
+        if(!newCommitHashFile.exists()) {
+            // if it doesn't exist --> create a new file
+            // if it does exist --> same hashcode --> objects don't change
+            writeObject(newCommitHashFile,serializedNewCommit);
+        }
+
+        //TODO: .git/index  --> clear
+        byte[] serializedemptyHashmap = Utils.serialize(new HashMap<String,String>());
+        writeObject(STAGING_AREA,serializedemptyHashmap);
+
+        //TODO: .git/HEAD --> store the new branch
+
 
         //TODO: .git/logs
     }
 
+    @SuppressWarnings("unchecked")
     public void rmCommand(File name) {
 
+        boolean tracked = false;
+        boolean added = false;
+        // check it if add --> in the staging area
+        HashMap<String,String> indexContent = readObject(STAGING_AREA,HashMap.class);
+        if(indexContent.containsKey(name.getPath())) {
+            indexContent.remove(name.getPath());
+            byte[] serializedIndexContent = Utils.serialize(indexContent);
+            writeObject(STAGING_AREA,serializedIndexContent); // refresh the STAGING_AREA
+            added = true;
+        }
+
+        // check it if tracked
+        // read from HEAD
+        String headHashCode = getHeadHashCode();
+        File headCommitFile = getHashFile(OBJECTS,headHashCode);
+        Commit headCommit = readObject(headCommitFile, Commit.class);
+        if(headCommit.getFilesCommitBlob().containsKey(name.getPath())) {
+            tracked = true;
+        }
+
+        if(tracked) {
+            // do not remove it unless it is tracked in the current commit
+            // so it is tracked here --> remove it from CWD
+            // stage it for removal --> Hashset
+            HashSet<String> removalHashSet = new HashSet<>();
+            if(REMOVE_INDEX.length() != 0) {
+                removalHashSet = readObject(REMOVE_INDEX, HashSet.class);
+            }
+            removalHashSet.add(name.getPath());
+            byte[] serializedRemovalPath = Utils.serialize(removalHashSet);
+            writeObject(REMOVE_INDEX,serializedRemovalPath);
+            name.delete();
+        }
+
+        if(!added && !tracked) {
+            System.out.println("No reason to remove the file.");
+            System.exit(0);
+        }
     }
+
+    public String getHeadHashCode() {
+        // 1、read from HEAD --> who is the HEAD
+        String headPositionStr = readContentsAsString(HEAD);
+        // 2、refs/heads/..(master)
+        File headPosition = new File(headPositionStr);
+        // return hashcode
+        return readContentsAsString(headPosition);
+    }
+
+    public File getHashFile(File path,String hashcode) {
+        String headHashDirName = hashcode.substring(0,2);
+        String headHashFileName = hashcode.substring(2);
+        return join(path,headHashDirName,headHashFileName);
+    }
+
+
 }

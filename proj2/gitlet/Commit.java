@@ -5,6 +5,7 @@ package gitlet;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Date; // You'll likely use this in this class
+import java.util.Map;
 import java.util.Objects;
 import java.util.HashMap;
 
@@ -29,7 +30,7 @@ public class Commit implements Serializable {
     // instance
     private Date timestamp;
     private String parent;
-    private HashMap<File,String> filesandBlob; // hello.txt && hashcode
+    private HashMap<String,String> filesandBlob; // hello.txt && hashcode
 
     /* TODO: fill in the rest of this class. */
     public Commit() {
@@ -49,9 +50,11 @@ public class Commit implements Serializable {
     public String getParent() {
         return this.parent;
     }
-    public HashMap<File, String> getFilesCommitBlob() {
+
+    public HashMap<String, String> getFilesCommitBlob() {
         return filesandBlob;
     }
+
 
     /** set method*/
     public void setTimestamp(Date timestamp) {
@@ -63,9 +66,14 @@ public class Commit implements Serializable {
     public void setParent(String parent) {
         this.parent = parent;
     }
-    // ?
-//    public void setFilesandBlob(File f,Objects obj) {
-//        this.filesandBlob.put(f,obj);
-//    }
+
+
+    public void setFilesandBlob(HashMap<String, String> hashMap) {
+        for(Map.Entry<String,String> entry:hashMap.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            this.filesandBlob.put(key,value);
+        }
+    }
 
 }

@@ -21,14 +21,28 @@
   ```
 
 * ```
-  private ArrayList<File> filesCommit;
+  private String hashcode;
   ```
 
 * ```
-  private ArrayList<Objects> blob;
+  private HashMap<String,String> filesandBlob;
   ```
 
+#### function
 
+* get function
+
+  ~~~
+  
+  ~~~
+
+* set function
+
+  ~~~
+  
+  ~~~
+
+  
 
 
 ### Repository
@@ -56,10 +70,16 @@
   ```
 
 * ```
-  File HEAD = join(GITLET_DIR,"HEAD");
+  public static final File Heads = join(REFS,"heads");
   ```
 
+* ```
+  public static final File HEAD = join(GITLET_DIR,"HEAD");* 
+  ```
 
+* ```
+  public static final File LOGS = join(GITLET_DIR,"logs");
+  ```
 
 #### function
 

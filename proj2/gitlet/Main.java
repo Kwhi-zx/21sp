@@ -34,8 +34,15 @@ public class Main {
                 repo.addCommand(addedFile);
                 break;
             }
-            case "commit":
+            case "commit": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please entry commit message!");
+                    System.exit(0);
+                }
+                String message = args[1];
+                repo.commitCommand(message);
                 break;
+            }
             case "rm":
                 break;
             case "log":
