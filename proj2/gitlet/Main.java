@@ -70,8 +70,10 @@ public class Main {
                 repo.find(message);
                 break;
             }
-            case "status":
+            case "status": {
+                repo.status();
                 break;
+            }
             case "checkout":
                 break;
             case "branch":

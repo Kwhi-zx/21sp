@@ -1,15 +1,13 @@
 package gitlet;
 
-
-
-import java.io.File;
-import java.util.*;
-
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
-import java.util.Formatter;
 import java.io.IOException;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /** Represents a gitlet repository.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -158,7 +156,7 @@ public class Repository {
                 return;
             }
         }
-        // TODO: case4: COMMIT VERSION
+        // TODO: case4: COMMIT VERSION  rm??
         // case2: a.txt & b.txt    --> same as case3: create a new one
         // don't serialize
         oldStagingInfo.put(fileRelativePaths,hashCode);
@@ -373,9 +371,56 @@ public class Repository {
             System.out.println("Found no commit with that message.");
         }
     }
-
+    @SuppressWarnings("unchecked")
     public void status() {
 
+        String str1 = "=== Branches ===";
+        String str2 = "=== Staged Files ===";
+        String str3 = "=== Removed Files ===";
+        String str4 = "=== Modifications Not Staged For Commit ===";
+        String str5 = "=== Untracked Files ===";
+
+        /** Branches */
+        List<String> branchesList = plainFilenamesIn(Heads); // list:[master、main、skeleton...]
+        String headHashcode = getHeadHashCode();
+        for(String branch:branchesList) {
+            System.out.println(str1);
+            File bfile = join(Heads,branch);
+            String bHashcode = readContentsAsString(bfile);
+            if(headHashcode.equals(bHashcode)) {
+                System.out.println("*"+branch+"%n");
+            }else {
+                System.out.println(branch+"%n");
+            }
+        }
+
+        /** Staged Files */
+        System.out.println(str2);
+        if(STAGING_AREA.length() != 0) {
+            HashMap<String, String> stageFile = readObject(STAGING_AREA, HashMap.class);
+            for (Map.Entry<String, String> entry : stageFile.entrySet()) {
+                String stagePath = entry.getKey(); // absolute path
+                File stagefile = new File(stagePath);
+                System.out.println(stagefile.getName()+"%n");
+            }
+        }
+
+        /** Removed Files*/
+        System.out.println(str3);
+        if(REMOVE_INDEX.length()!=0) {
+            HashSet<String> removeFile = readObject(REMOVE_INDEX,HashSet.class);
+            for(String path:removeFile) {
+                // it has been removed
+                Path p = Paths.get(path);
+                System.out.println(p.getFileName()+"%n");
+            }
+        }
+
+        /** TODO:Modifications Not Staged For Commit */
+        System.out.println(str4);
+
+        /** TODO:Untracked Files */
+        System.out.println(str5);
     }
 
 
@@ -394,6 +439,7 @@ public class Repository {
         String headHashFileName = hashcode.substring(2);
         return join(path,headHashDirName,headHashFileName);
     }
+
 
 
 }
