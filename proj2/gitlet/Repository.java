@@ -85,6 +85,7 @@ public class Repository {
         // TODO: relativaly Path ?
         writeContents(HEAD,headFile.getPath()); // "yeah,the HEAD pointer --->" ref: refs/heads/master
 
+
         // initail the commit message
         Commit initCommit = new Commit();
         byte[] serializedCommit = Utils.serialize(initCommit); // serialize the Commit for the sha1
@@ -240,8 +241,8 @@ public class Repository {
         HashMap<String,String> indexContent = Utils.readObject(STAGING_AREA,HashMap.class);
         if(indexContent.containsKey(name.getPath())) {
             indexContent.remove(name.getPath());
-            byte[] serializedIndexContent = Utils.serialize(indexContent);
-            writeObject(STAGING_AREA,serializedIndexContent); // refresh the STAGING_AREA
+            // don't serialize
+            writeObject(STAGING_AREA,indexContent); // refresh the STAGING_AREA
             added = true;
         }
 
@@ -319,26 +320,61 @@ public class Repository {
         String formatString = "commit %s%nDate: %tc%n%s%n";
 
         // get .git/objects/xx(dir)
-        String[] fileList = OBJECTS.list();
-        for(String dir:fileList) {
-            List<String> filenames = Utils.plainFilenamesIn(dir);
-            for(String filename:filenames) {
-                File file = join(OBJECTS,dir,filename);
-                try {
-                    Commit logCommit = readObject(file,Commit.class);
-                    String hashcode = String.valueOf(join(dir,filename));
-                    String output = String.format(formatString,
-                            hashcode,
-                            logCommit.getTimestamp(),
-                            logCommit.getMessage());
-                    System.out.println(logFormat);
-                    System.out.println(output);
-                } catch (ClassCastException e) {
-                    // Just ignore it and continue to the next file.
-                }
+        File[] filesList = OBJECTS.listFiles();
+        if (filesList != null) {
+            for(File dir:filesList) {
+                List<String> filenames = Utils.plainFilenamesIn(dir);
+                    for(String filename:filenames) {
+                        File file = join(dir,filename); // .gitlet/objects/xx + /...
+                        try {
+                            Commit logCommit = readObject(file,Commit.class);
+                            String hashcode = dir.getName() + filename; //  /xx + /...
+                            String output = String.format(formatString,
+                                    hashcode,
+                                    logCommit.getTimestamp(),
+                                    logCommit.getMessage());
+                            System.out.println(logFormat);
+                            System.out.println(output);
+                        } catch (Exception e) {
+                            // Just ignore it and continue to the next file.
+                        }
+                    }
+
             }
         }
 
+    }
+
+    public void find(String message) {
+
+        boolean existed = false;
+        // get .git/objects/xx(dir)
+        File[] filesList = OBJECTS.listFiles();
+        if (filesList != null) {
+            for(File dir:filesList) {
+                List<String> filenames = Utils.plainFilenamesIn(dir);
+                for(String filename:filenames) {
+                    File file = join(dir,filename); // .gitlet/objects/xx + /...
+                    try {
+                        Commit findCommit = readObject(file,Commit.class);
+                        if(message.equals(findCommit.getMessage())) {
+                            existed = true;
+                            String hashcode = dir.getName() + filename;
+                            System.out.println(hashcode);
+                        }
+                    } catch (Exception e) {
+                        // Just ignore it and continue to the next file.
+                    }
+                }
+
+            }
+        }
+        if(!existed) {
+            System.out.println("Found no commit with that message.");
+        }
+    }
+
+    public void status() {
 
     }
 

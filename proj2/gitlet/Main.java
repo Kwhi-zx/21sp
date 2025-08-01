@@ -61,8 +61,15 @@ public class Main {
                 repo.globalLog();
                 break;
             }
-            case "find":
+            case "find": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please entry commit message!");
+                    System.exit(0);
+                }
+                String message = args[1];
+                repo.find(message);
                 break;
+            }
             case "status":
                 break;
             case "checkout":
