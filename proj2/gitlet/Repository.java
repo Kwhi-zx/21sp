@@ -1,6 +1,6 @@
 package gitlet;
 
-import net.sf.saxon.trans.SymbolicName;
+
 
 import java.io.File;
 import java.util.*;
@@ -8,7 +8,7 @@ import java.util.*;
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
-import java.nio.file.Path;
+import java.util.Formatter;
 import java.io.IOException;
 
 /** Represents a gitlet repository.
@@ -47,7 +47,6 @@ public class Repository {
     public static final File HEAD = join(GITLET_DIR,"HEAD");
 
 
-    public static final File LOGS = join(GITLET_DIR,"logs");
 
     /* TODO: fill in the rest of this class. */
 
@@ -84,7 +83,7 @@ public class Repository {
         File headFile = join(Heads,"master");
         // .git/HEAD
         // TODO: relativaly Path ?
-        writeContents(HEAD,"refs/heads/master"); // "yeah,the HEAD pointer --->" ref: refs/heads/master
+        writeContents(HEAD,headFile.getPath()); // "yeah,the HEAD pointer --->" ref: refs/heads/master
 
         // initail the commit message
         Commit initCommit = new Commit();
@@ -143,7 +142,7 @@ public class Repository {
         HashMap<String,String> oldStagingInfo = new HashMap<>();
 
         if(STAGING_AREA.length() !=0) {
-            oldStagingInfo = readObject(STAGING_AREA, HashMap.class);
+            oldStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
         }
 
         // store filePath and hashCode
@@ -160,9 +159,9 @@ public class Repository {
         }
         // TODO: case4: COMMIT VERSION
         // case2: a.txt & b.txt    --> same as case3: create a new one
+        // don't serialize
         oldStagingInfo.put(fileRelativePaths,hashCode);
-        byte[] serializedStagingInfo = Utils.serialize(oldStagingInfo);
-        Utils.writeObject(STAGING_AREA,serializedStagingInfo); // overwrites
+        Utils.writeObject(STAGING_AREA,oldStagingInfo); // overwrites
     }
 
     @SuppressWarnings("unchecked")
@@ -178,7 +177,7 @@ public class Repository {
         // inherent from parent
         String parentCommitHash = getHeadHashCode();
         File parentContentFile = getHashFile(OBJECTS,parentCommitHash);
-        Commit parentCommit = readObject(parentContentFile,Commit.class);
+        Commit parentCommit = Utils.readObject(parentContentFile,Commit.class);
 
         newCommit.setParent(parentCommitHash);
         newCommit.setFilesandBlob(parentCommit.getFilesCommitBlob());
@@ -194,7 +193,7 @@ public class Repository {
         // refresh the inherentHashMap
         HashMap<String,String> newStagingInfo = new HashMap<>();
         HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
-        newStagingInfo = readObject(STAGING_AREA,HashMap.class);
+        newStagingInfo = Utils.readObject(STAGING_AREA,HashMap.class);
         for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
             // go through the STAGING AREA and overwrite
             String filePath = entry.getKey();
@@ -217,15 +216,17 @@ public class Repository {
         if(!newCommitHashFile.exists()) {
             // if it doesn't exist --> create a new file
             // if it does exist --> same hashcode --> objects don't change
-            writeObject(newCommitHashFile,serializedNewCommit);
+            // don't serialize
+            writeObject(newCommitHashFile,newCommit);
         }
 
-        //TODO: .git/index  --> clear
-        byte[] serializedemptyHashmap = Utils.serialize(new HashMap<String,String>());
-        writeObject(STAGING_AREA,serializedemptyHashmap);
+        //.git/index  --> clear
+        HashMap<String,String> emptyHashmap = new HashMap<>();
+        writeObject(STAGING_AREA,emptyHashmap);
 
-        //TODO: .git/HEAD --> store the new branch
-
+        //.git/refs/heads/master  --> change HEAD
+        File headFile = join(Heads,"master");
+        writeContents(headFile,newCommitHashcode);
 
         //TODO: .git/logs
     }
@@ -236,7 +237,7 @@ public class Repository {
         boolean tracked = false;
         boolean added = false;
         // check it if add --> in the staging area
-        HashMap<String,String> indexContent = readObject(STAGING_AREA,HashMap.class);
+        HashMap<String,String> indexContent = Utils.readObject(STAGING_AREA,HashMap.class);
         if(indexContent.containsKey(name.getPath())) {
             indexContent.remove(name.getPath());
             byte[] serializedIndexContent = Utils.serialize(indexContent);
@@ -248,7 +249,7 @@ public class Repository {
         // read from HEAD
         String headHashCode = getHeadHashCode();
         File headCommitFile = getHashFile(OBJECTS,headHashCode);
-        Commit headCommit = readObject(headCommitFile, Commit.class);
+        Commit headCommit = Utils.readObject(headCommitFile, Commit.class);
         if(headCommit.getFilesCommitBlob().containsKey(name.getPath())) {
             tracked = true;
         }
@@ -259,11 +260,11 @@ public class Repository {
             // stage it for removal --> Hashset
             HashSet<String> removalHashSet = new HashSet<>();
             if(REMOVE_INDEX.length() != 0) {
-                removalHashSet = readObject(REMOVE_INDEX, HashSet.class);
+                removalHashSet = Utils.readObject(REMOVE_INDEX, HashSet.class);
             }
             removalHashSet.add(name.getPath());
-            byte[] serializedRemovalPath = Utils.serialize(removalHashSet);
-            writeObject(REMOVE_INDEX,serializedRemovalPath);
+            // don't serialize
+            writeObject(REMOVE_INDEX,removalHashSet);
             name.delete();
         }
 
@@ -272,6 +273,76 @@ public class Repository {
             System.exit(0);
         }
     }
+
+    public void log() {
+
+        // define string format
+        String logFormat = "===";
+        String formatString = "commit %s%nDate: %tc%n%s%n";
+
+        // Linear History
+        // The HEAD
+        String headHashcode = getHeadHashCode();
+        File headHashFile = getHashFile(OBJECTS,headHashcode);
+        Commit headCommit = Utils.readObject(headHashFile,Commit.class);
+
+        String output = String.format(formatString,
+                                        headHashcode,
+                                        headCommit.getTimestamp(),
+                                        headCommit.getMessage());
+        System.out.println(logFormat);
+        System.out.println(output);
+
+        // iterate the parent
+        String childHashcode = headCommit.getParent();
+        while (childHashcode !=null) {
+            System.out.println(logFormat); // ===
+            File childHashFile = getHashFile(OBJECTS, childHashcode);
+            Commit childCommit = Utils.readObject(childHashFile, Commit.class);
+            String childOutput = String.format(formatString,
+                                                childHashcode,
+                                                childCommit.getTimestamp(),
+                                                childCommit.getMessage());
+            System.out.println(childOutput);
+            childHashcode = childCommit.getParent();
+        }
+
+
+        //TODO: merge
+    }
+
+    public void globalLog() {
+
+        // displays information about all commits ever made.
+        // The order of the commits does not matter.
+        String logFormat = "===";
+        String formatString = "commit %s%nDate: %tc%n%s%n";
+
+        // get .git/objects/xx(dir)
+        String[] fileList = OBJECTS.list();
+        for(String dir:fileList) {
+            List<String> filenames = Utils.plainFilenamesIn(dir);
+            for(String filename:filenames) {
+                File file = join(OBJECTS,dir,filename);
+                try {
+                    Commit logCommit = readObject(file,Commit.class);
+                    String hashcode = String.valueOf(join(dir,filename));
+                    String output = String.format(formatString,
+                            hashcode,
+                            logCommit.getTimestamp(),
+                            logCommit.getMessage());
+                    System.out.println(logFormat);
+                    System.out.println(output);
+                } catch (ClassCastException e) {
+                    // Just ignore it and continue to the next file.
+                }
+            }
+        }
+
+
+    }
+
+
 
     public String getHeadHashCode() {
         // 1、read from HEAD --> who is the HEAD

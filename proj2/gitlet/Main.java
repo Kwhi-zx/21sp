@@ -43,12 +43,24 @@ public class Main {
                 repo.commitCommand(message);
                 break;
             }
-            case "rm":
+            case "rm": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please enter a File name");
+                    System.exit(0);
+                }
+                String filePath = args[1];
+                File rmFile = new File(filePath);
+                repo.rmCommand(rmFile);
                 break;
-            case "log":
+            }
+            case "log": {
+                repo.log();
                 break;
-            case "global-log":
+            }
+            case "global-log": {
+                repo.globalLog();
                 break;
+            }
             case "find":
                 break;
             case "status":
