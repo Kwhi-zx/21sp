@@ -8,25 +8,10 @@
 
 #### Instance
 
-* ```
-  String message;
+* ```java
+  
   ```
 
-* ```
-  Date timestamp;
-  ```
-
-* ```
-  String parent;
-  ```
-
-* ```
-  private String hashcode;
-  ```
-
-* ```
-  private HashMap<String,String> filesandBlob;
-  ```
 
 #### function
 
@@ -50,36 +35,63 @@
 #### Instance
 
 * ```java
-  File CWD = new File(System.getProperty("user.dir"));
-  ```
-
-* ```
-  File GITLET_DIR = join(CWD, ".gitlet");
-  ```
-
-* ```
-  File OBJECTS = join(GITLET_DIR,"objects");
-  ```
-
-* ```
-  File STAGING_AREA = join(GITLET_DIR,"index");
-  ```
-
-* ```
-  File REFS = join(GITLET_DIR,"refs");
-  ```
-
-* ```
+      /** The current working directory. */
+  public static final File CWD = new File(System.getProperty("user.dir"));
+    /** The .gitlet directory. */
+  public static final File GITLET_DIR = join(CWD, ".gitlet");
+  
+      // mine instance
+  public static final File OBJECTS = join(GITLET_DIR,"objects");
+      /** The staging area*/
+  public static final File STAGING_AREA = join(GITLET_DIR,"index");
+  
+      /** The staging area for removal*/
+  public static final File REMOVE_INDEX = join(GITLET_DIR,"rm_index");
+  
+      /** storing  master*/
+  public static final File REFS = join(GITLET_DIR,"refs");
   public static final File Heads = join(REFS,"heads");
+      /** HEAD*/
+  public static final File HEAD = join(GITLET_DIR,"HEAD");
   ```
-
-* ```
-  public static final File HEAD = join(GITLET_DIR,"HEAD");* 
-  ```
-
-* ```
-  public static final File LOGS = join(GITLET_DIR,"logs");
-  ```
+  
+* ~~~
+  .gitlet
+  	|
+  	|---objects(dir)
+  	|	    |
+  	|		|---6a(initCommit)  ---> write/readObject(xxx,Commit.class)  (init)
+  	|		|	|---7b...
+  	|		|
+  	|		|---4b(File content (Blob)) ---> write/readObject(xxx,byte[])   (add)
+  	|		|	|---8d...
+  	|		|
+  	|		|---2d(new Commit)	(add)
+  	|		|	|---3c
+  	|
+  	|
+  	|---index(暂存区) --> (path:hashcode) --> write/readObject(xxx,Hashmap.class) (add)
+  	|	  
+  	|
+  	|---rm_index(暂存区) --> (path) --> (xxx,HashSet.class) (rm)
+  	|
+  	|---refs
+  	|	 |
+  	|	 |--heads
+  	|	 |	  |
+  	|	 |	  |--master:Commit's hashcode
+      |	 |
+  	|	 |
+  	|
+  	|
+  	|---HEAD:refs/heads/xxx
+  	|
+  
+  
+  
+  ~~~
+  
+* 
 
 #### function
 

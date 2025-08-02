@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.rmi.server.RMIClassLoader;
 import java.util.*;
 
 /** Represents a gitlet repository.
@@ -116,12 +117,54 @@ public class Repository {
     @SuppressWarnings("unchecked")
     public void addCommand(File name) {
 
+        // the cur file
         byte[] contents = readContents(name);
         String hashCode = Utils.sha1(contents); // sha1 contents
+        String fileRelativePaths = name.getPath();
 
         String hashDirName = hashCode.substring(0,2); // get first 2 chars for the file name
         String hashFileName = hashCode.substring(2);
 
+        // .git/index
+        // persistence --> read from file
+        HashMap<String, String> oldStagingInfo = new HashMap<>();
+        if (STAGING_AREA.length() != 0) {
+            oldStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
+        }
+
+        // .git/rm_index which store the file path
+        HashSet<String> rmHashset = new HashSet<>();
+        if(REMOVE_INDEX.length() != 0) {
+            rmHashset = readObject(REMOVE_INDEX,HashSet.class);
+        }
+
+        // Get the cur commit
+        String headHashcode = getHeadHashCode();
+        File headFile = getHashFile(OBJECTS,headHashcode);
+        Commit curCommit = Utils.readObject(headFile,Commit.class);
+        HashMap<String,String> curCommitContent = curCommit.getFilesCommitBlob();
+
+        // If the current working version of the file is
+        // identical to the version in the current commit,
+        // TODO: no for? containsKeys
+        for(Map.Entry<String,String> entry: curCommitContent.entrySet()) {
+            String pathKey = entry.getKey();
+            String hashValue = entry.getValue();
+            if(fileRelativePaths.equals(pathKey) && hashCode.equals(hashValue)) {
+                if (!oldStagingInfo.isEmpty()) {
+                    // remove it from the staging area if it is already there
+                    oldStagingInfo.remove(fileRelativePaths);
+                    if (!rmHashset.isEmpty()) {
+                        rmHashset.remove(fileRelativePaths);
+                    }
+                    // save
+                    Utils.writeObject(STAGING_AREA, oldStagingInfo);
+                    Utils.writeObject(REMOVE_INDEX,rmHashset);
+                    // do not stage it to be added,
+                    return;
+                }
+            }
+        }
         // .git/objects/xx
         File hashFileDir = join(OBJECTS,hashDirName);
         if (!hashFileDir.exists()) {
@@ -136,31 +179,28 @@ public class Repository {
            writeObject(hashFile,contents);
         }
 
-        // .git/index
-        // persistence --> read from file
-        HashMap<String,String> oldStagingInfo = new HashMap<>();
-
-        if(STAGING_AREA.length() !=0) {
-            oldStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
-        }
-
         // store filePath and hashCode
-        String fileRelativePaths = name.getPath();
         // if two files have the same filePath
-        if(!oldStagingInfo.isEmpty() &&
-         oldStagingInfo.containsKey(fileRelativePaths)) {
+        if (!oldStagingInfo.isEmpty() && oldStagingInfo.containsKey(fileRelativePaths)) {
             // case1: a.txt --> a.txt  --> content doesn't change
             // --> it should pass
             String hashvalue = oldStagingInfo.get(fileRelativePaths);
-            if(hashvalue.equals(hashCode)) {
+            if (hashvalue.equals(hashCode)) {
                 return;
             }
         }
-        // TODO: case4: COMMIT VERSION  rm??
         // case2: a.txt & b.txt    --> same as case3: create a new one
+        oldStagingInfo.put(fileRelativePaths, hashCode);
         // don't serialize
-        oldStagingInfo.put(fileRelativePaths,hashCode);
-        Utils.writeObject(STAGING_AREA,oldStagingInfo); // overwrites
+        Utils.writeObject(STAGING_AREA, oldStagingInfo); // overwrites
+
+        // The file will no longer be staged for removal ,
+        // if it was at the time of the command.
+        if (!rmHashset.isEmpty()) {
+            // remove() already check if path exist
+            rmHashset.remove(fileRelativePaths);
+        }
+        writeObject(REMOVE_INDEX,rmHashset);
     }
 
     @SuppressWarnings("unchecked")
@@ -181,23 +221,31 @@ public class Repository {
         newCommit.setParent(parentCommitHash);
         newCommit.setFilesandBlob(parentCommit.getFilesCommitBlob());
 
-        // .git/index
-        // TODO: rm
-        if(STAGING_AREA.length() == 0) {
+        // .git/index   .git/rm_index
+        if(STAGING_AREA.length() == 0 && REMOVE_INDEX.length() == 0) {
             // if staging area is empty
             System.out.println("Everything up-to-date!");
             System.exit(0);
         }
 
         // refresh the inherentHashMap
-        HashMap<String,String> newStagingInfo = new HashMap<>();
         HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
+
+        // add
+        HashMap<String,String> newStagingInfo = new HashMap<>();
         newStagingInfo = Utils.readObject(STAGING_AREA,HashMap.class);
         for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
             // go through the STAGING AREA and overwrite
             String filePath = entry.getKey();
             String fileHashCode = entry.getValue();
             inherentHashMap.put(filePath,fileHashCode); // overwrite
+        }
+
+        // remove
+        HashSet<String> newRemoveInfo = new HashSet<>();
+        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
+        for(String pathName:newRemoveInfo) {
+            inherentHashMap.remove(pathName);
         }
 
         // .git/objects --> store the newCommit
@@ -223,11 +271,14 @@ public class Repository {
         HashMap<String,String> emptyHashmap = new HashMap<>();
         writeObject(STAGING_AREA,emptyHashmap);
 
+        //.git/rm_index --> clear
+        HashSet<String> emptyHashset = new HashSet<>();
+        writeObject(REMOVE_INDEX,emptyHashset);
+
         //.git/refs/heads/master  --> change HEAD
         File headFile = join(Heads,"master");
         writeContents(headFile,newCommitHashcode);
 
-        //TODO: .git/logs
     }
 
     @SuppressWarnings("unchecked")
@@ -238,6 +289,7 @@ public class Repository {
         // check it if add --> in the staging area
         HashMap<String,String> indexContent = Utils.readObject(STAGING_AREA,HashMap.class);
         if(indexContent.containsKey(name.getPath())) {
+            // Unstage the file if it is currently staged for addition
             indexContent.remove(name.getPath());
             // don't serialize
             writeObject(STAGING_AREA,indexContent); // refresh the STAGING_AREA
@@ -307,7 +359,7 @@ public class Repository {
         }
 
 
-        //TODO: merge
+        //: merge
     }
 
     public void globalLog() {
@@ -416,11 +468,54 @@ public class Repository {
             }
         }
 
-        /** TODO:Modifications Not Staged For Commit */
+        /** :Modifications Not Staged For Commit */
         System.out.println(str4);
 
-        /** TODO:Untracked Files */
+        /** :Untracked Files */
         System.out.println(str5);
+    }
+
+    public void checkout(File fName) {
+        // get the head commit
+        String headHashCode= getHeadHashCode();
+        File headFile = getHashFile(OBJECTS,headHashCode);
+        Commit headCommit = readObject(headFile,Commit.class);
+        checkoutHelper(headCommit,fName);
+    }
+
+    public void checkout(String commitId,File fName) {
+
+        File specFile = getHashFile(OBJECTS,commitId);
+        if(!specFile.exists()) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+        Commit specCommit = readObject(specFile,Commit.class);
+        checkoutHelper(specCommit,fName);
+    }
+    public void checkoutHelper(Commit cm,File fName) {
+
+        if(cm.getFilesCommitBlob().containsKey(fName.getPath())) {
+            String pathName = fName.getPath();
+            String hashcode = cm.getFilesCommitBlob().get(pathName);
+            // get the file content(Blob) from .gitlet/objects
+            File blobFile = getHashFile(OBJECTS,hashcode);
+            byte[] blobContent = readContents(blobFile);
+
+            // get the file's relative path
+            // if the fName == "/proj2/ab.java" --getPath--> /proj2/ab.java
+
+            String relativePathKey = getRelativePath(CWD,fName);
+            File cwdFile = join(CWD,relativePathKey);
+            writeObject(cwdFile, blobContent); // automatically create the file if it doesn't exist
+            return;
+        }
+        System.out.println("File does not exist in that commit.");
+
+    }
+
+    public void checkout(String branchName) {
+        //Branch
     }
 
 
@@ -438,6 +533,12 @@ public class Repository {
         String headHashDirName = hashcode.substring(0,2);
         String headHashFileName = hashcode.substring(2);
         return join(path,headHashDirName,headHashFileName);
+    }
+    public String getRelativePath(File mainPath,File name) {
+        Path pathMain = mainPath.toPath(); // CWD/OBJECTS...
+        Path inputPath = name.toPath();    // file name
+        Path relativePath = pathMain.relativize(inputPath);
+        return relativePath.toString().replace('\\', '/');
     }
 
 

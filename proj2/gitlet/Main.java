@@ -74,8 +74,31 @@ public class Main {
                 repo.status();
                 break;
             }
-            case "checkout":
+            case "checkout": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please entry [file name]/[commit id] -- [file name]/[branch name]");
+                    System.exit(0);
+                }
+                if(args[2].isEmpty()) {
+                    // only one args
+                    String name = args[1];
+                    File f = new File(name);
+                    if(f.exists()) {
+                        // call [file name]
+                        repo.checkout(f);
+                        break;
+                    }
+                    // call [branch name]
+                    repo.checkout(name);
+                    break;
+                }
+                // call [commit id] -- [file name]
+                String commitId = args[1];
+                String name = args[2];
+                File f = new File(name);
+                repo.checkout(commitId,f);
                 break;
+            }
             case "branch":
                 break;
             case "rm-branch":
