@@ -9,23 +9,46 @@
 #### Instance
 
 * ```java
+  private String message;
+  private Date timestamp;
+private String parent;
+  // 用于存储此Commit中修改的文件路径以及其哈希值
+  // (key:value) --> (path:hashcode)
+  private HashMap<String,String> filesandBlob; // hello.txt && hashcode
   
+  
+  ------------------------------------------
+  |		| metadata: message && timestamp |
+  |parent |---------------------------------
+  |		|	Hashmap<String,String>		 |
+  |		|	: <path:hashcode>			 |							 
+  ------------------------------------------
+  path: i.e hello.txt    
+  hashcode: i.e 0e93cac    
+      
+  logic pic:
+  --------------------------------------------------------------------------------------
+         HEAD (.gitlet/HEAD) 
+         --> refs/heads/..(i.e master) 
+         --> Commit hashcode(i.e 5e6194cbf)
+         --> .gitlet/objects/5e/6194cbf  (这里存储的是Commit class)
+         --> readObject(Commit.class)  --> hashmap(i.e 0e93cac) 
+         --> .gitlet/objects/0e/93cac... 
+         --> readObject(byte[])/readContent 
+         --> 获得文件内容
+  --------------------------------------------------------------------------------------
   ```
+  
+
+![1754126923485](C:\Users\HUAWEI\AppData\Roaming\Typora\typora-user-images\1754126923485.png)
+
 
 
 #### function
 
 * get function
 
-  ~~~
-  
-  ~~~
-
 * set function
-
-  ~~~
-  
-  ~~~
 
   
 
@@ -80,7 +103,8 @@
   	|	 |--heads
   	|	 |	  |
   	|	 |	  |--master:Commit's hashcode
-      |	 |
+  	|	 |	  |	
+      |	 |	  |--cool-beans: 
   	|	 |
   	|
   	|
@@ -91,19 +115,29 @@
   
   ~~~
   
-* 
+  
 
-#### function
+### Utils
 
-* ```
-  public void initCommand()
-  ```
+~~~
+# 文本内容
+byte[] content = serialize();
+writeObject(file,content);
 
-* ```
-  public void addCommand(File name)
-  ```
+# 数据结构
+Commit commit // Hashmap hm
+writeObject(file,commit/hm);
+readObject(file,Commit.class/Hashmap.class)
+
+# hashcode
+writecontent(file,hashcode)
+~~~
+
+
 
 ## Algorithms
 
 ## Persistence
+
+
 
