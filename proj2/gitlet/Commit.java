@@ -50,7 +50,6 @@ public class Commit implements Serializable {
     public String getParent() {
         return this.parent;
     }
-
     public HashMap<String, String> getFilesCommitBlob() {
         return filesandBlob;
     }

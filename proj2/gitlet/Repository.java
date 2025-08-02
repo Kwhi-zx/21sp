@@ -359,7 +359,7 @@ public class Repository {
         }
 
 
-        //: merge
+        //TODO: merge
     }
 
     public void globalLog() {
@@ -468,10 +468,10 @@ public class Repository {
             }
         }
 
-        /** :Modifications Not Staged For Commit */
+        /** TODO:Modifications Not Staged For Commit */
         System.out.println(str4);
 
-        /** :Untracked Files */
+        /** TODO:Untracked Files */
         System.out.println(str5);
     }
 
@@ -515,7 +515,22 @@ public class Repository {
     }
 
     public void checkout(String branchName) {
-        //Branch
+        //TODO:
+    }
+
+    public void branch(String name) {
+
+        // cur HEAD Commit
+        String headHashCode = getHeadHashCode();
+        // .gitlet/refs/heads/new_branch
+        File newBranchFile = join(Heads,name);
+        if(newBranchFile.exists()) {
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        // Creates a new branch with the given name,
+        // and points it at the current head commit
+        writeContents(newBranchFile,headHashCode);
     }
 
 

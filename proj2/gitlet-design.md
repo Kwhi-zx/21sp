@@ -34,7 +34,7 @@ private String parent;
          --> .gitlet/objects/5e/6194cbf  (这里存储的是Commit class)
          --> readObject(Commit.class)  --> hashmap(i.e 0e93cac) 
          --> .gitlet/objects/0e/93cac... 
-         --> readObject(byte[])/readContent 
+         --> readContent 
          --> 获得文件内容
   --------------------------------------------------------------------------------------
   ```

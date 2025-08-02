@@ -99,8 +99,15 @@ public class Main {
                 repo.checkout(commitId,f);
                 break;
             }
-            case "branch":
+            case "branch": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please entry a branch name");
+                    System.exit(0);
+                }
+                String branchName = args[1];
+                repo.branch(branchName);
                 break;
+            }
             case "rm-branch":
                 break;
             case "reset":
