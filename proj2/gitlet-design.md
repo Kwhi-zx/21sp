@@ -120,7 +120,7 @@ private String parent;
 ### Utils
 
 ~~~
-# 文本内容
+# blob的内容
 byte[] content = serialize();
 writeObject(file,content);
 

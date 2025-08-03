@@ -2,12 +2,11 @@ package gitlet;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
+// any imports you need here
 import java.io.IOException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.rmi.server.RMIClassLoader;
 import java.util.*;
 
 /** Represents a gitlet repository.
@@ -18,7 +17,7 @@ import java.util.*;
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
+     * add instance variables here.
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
@@ -47,7 +46,7 @@ public class Repository {
 
 
 
-    /* TODO: fill in the rest of this class. */
+    /* fill in the rest of this class. */
 
     /**
     *   Creates a new Gitlet version-control system in the current directory
@@ -177,6 +176,7 @@ public class Repository {
             // if it doesn't exist --> create a new file
             // if it does exist --> same hashcode --> objects don't change
            writeObject(hashFile,contents);
+//           writeContents(hashFile,contents);
         }
 
         // store filePath and hashCode
@@ -389,7 +389,6 @@ public class Repository {
                             // Just ignore it and continue to the next file.
                         }
                     }
-
             }
         }
 
@@ -507,6 +506,7 @@ public class Repository {
 
             String relativePathKey = getRelativePath(CWD,fName);
             File cwdFile = join(CWD,relativePathKey);
+//            writeContents(cwdFile,blobContent);
             writeObject(cwdFile, blobContent); // automatically create the file if it doesn't exist
             return;
         }
@@ -515,7 +515,88 @@ public class Repository {
     }
 
     public void checkout(String branchName) {
-        //TODO:
+
+        // .gitlet/refs/heads/branchName --> check if it exists
+        File branchFile = join(Heads,branchName);
+        if(!branchFile.exists()) {
+            System.out.println("No such branch exists.");
+            return;
+        }
+
+        // get the cur Commit
+        // .gitlet/HEAD  --> check if it is
+        String headPositionStr = readContentsAsString(HEAD);
+        // .gitlet/heads/master
+        File curHeadPath = new File(headPositionStr);
+        if(branchName.equals(curHeadPath.getName())) {
+            System.out.println("No need to checkout the current branch.");
+            return;
+        }
+
+        String curCommitHashcode =readContentsAsString(curHeadPath);
+        File curCommitFile = getHashFile(OBJECTS,curCommitHashcode);
+        Commit curCommit = readObject(curCommitFile,Commit.class);
+        HashMap<String,String> curCommitTrackedF = curCommit.getFilesCommitBlob();
+
+        // get the checkout branch Commit
+        // according to the Commit's Hashmap
+        String checkoutCommitHashcode = readContentsAsString(branchFile);
+        File checkoutCommitFile = getHashFile(OBJECTS,checkoutCommitHashcode);
+        // Commit --> branch needs to create one?
+        // no need --> the new branch inherent the old commit
+        Commit checkoutCommit =  readObject(checkoutCommitFile, Commit.class);
+        HashMap<String,String> checkoutHashmap = checkoutCommit.getFilesCommitBlob();
+
+        // get CWD files
+        List<String> fileList = plainFilenamesIn(CWD);
+
+        if (fileList != null) {
+            // 1、check if a working file is untracked in the current branch
+            // 2、and would be overwritten by the checkout
+            for(String filename:fileList) {
+                File f = new File(filename);
+                if(!curCommitTrackedF.containsKey(f.getPath())) {
+                    if(checkoutHashmap.containsKey(f.getPath())) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        return;
+                    }
+                }
+            }
+
+            // delete the CWD files that checkoutBranch doesn't have
+            // 1、Any files that are tracked in the current branch
+            // 2、but are not present in the checked-out branch are deleted.
+            for (String filename : fileList) {
+                File f = new File(filename);
+                if(!checkoutHashmap.containsKey(f.getPath())
+                && curCommitTrackedF.containsKey(f.getPath())) {
+                    // delete from the CWD
+                    f.delete();
+                }
+            }
+
+            // overwrite or create a new file
+            for(String checkoutHashKey:checkoutHashmap.keySet()) {
+                String blobHash = checkoutHashmap.get(checkoutHashKey);
+                File blobFile =getHashFile(OBJECTS,blobHash);
+                byte[] blobContent = readContents(blobFile);
+
+                // overwrite or create a new file
+                File cwdBlobFile = new File(checkoutHashKey);
+//                writeContents(cwdBlobFile,blobContent);
+                writeObject(cwdBlobFile,blobContent);
+            }
+
+        }
+
+        // clear the staging area
+        //.git/index  --> clear
+        HashMap<String,String> emptyHashmap = new HashMap<>();
+        writeObject(STAGING_AREA,emptyHashmap);
+
+        // given branch will now be considered the current branch (HEAD)
+        // refresh the HEAD file with new branch path
+        writeContents(HEAD,branchFile.getPath());
     }
 
     public void branch(String name) {
@@ -531,6 +612,18 @@ public class Repository {
         // Creates a new branch with the given name,
         // and points it at the current head commit
         writeContents(newBranchFile,headHashCode);
+    }
+
+    public void rm_branch(String branchName) {
+
+    }
+
+    public void reset(String commitId) {
+
+    }
+
+    public void merge(String branchName) {
+
     }
 
 
