@@ -75,28 +75,28 @@ public class Main {
                 break;
             }
             case "checkout": {
-                if(args[1].isEmpty()) {
+                // checkout [branchName]
+                if(args.length == 2) {
+                    String branchName = args[1];
+                    repo.checkout(branchName);
+                }
+                // checkout -- [file name]
+                else if (args.length == 3 && args[1].equals("--")) {
+                    String fileName = args[2];
+                    File file = new File(fileName);
+                    repo.checkout(file);
+                }
+                // checkout [commit id] -- [file name]
+                else if (args.length == 4 && args[2].equals("--")) {
+                    String commitId = args[1];
+                    String fileName = args[3];
+                    File file = new File(fileName);
+                    repo.checkout(commitId,file);
+                }
+                else {
                     System.out.println("Please entry [file name]/[commit id] -- [file name]/[branch name]");
                     System.exit(0);
                 }
-                if(args[2].isEmpty()) {
-                    // only one args
-                    String name = args[1];
-                    File f = new File(name);
-                    if(f.exists()) {
-                        // call [file name]
-                        repo.checkout(f);
-                        break;
-                    }
-                    // call [branch name]
-                    repo.checkout(name);
-                    break;
-                }
-                // call [commit id] -- [file name]
-                String commitId = args[1];
-                String name = args[2];
-                File f = new File(name);
-                repo.checkout(commitId,f);
                 break;
             }
             case "branch": {

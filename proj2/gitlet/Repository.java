@@ -145,11 +145,9 @@ public class Repository {
 
         // If the current working version of the file is
         // identical to the version in the current commit,
-        // TODO: no for? containsKeys
-        for(Map.Entry<String,String> entry: curCommitContent.entrySet()) {
-            String pathKey = entry.getKey();
-            String hashValue = entry.getValue();
-            if(fileRelativePaths.equals(pathKey) && hashCode.equals(hashValue)) {
+        if(curCommitContent.containsKey(fileRelativePaths)) {
+            String hashValue = curCommitContent.get(fileRelativePaths);
+            if(hashCode.equals(hashValue)) {
                 if (!oldStagingInfo.isEmpty()) {
                     // remove it from the staging area if it is already there
                     oldStagingInfo.remove(fileRelativePaths);
@@ -616,6 +614,23 @@ public class Repository {
 
     public void rm_branch(String branchName) {
 
+        String headPositionStr = readContentsAsString(HEAD);
+        // refs/heads/..
+        File headPosition = new File(headPositionStr);
+        if(branchName.equals(headPosition.getName())) {
+            // If you try to remove the branch you’re currently on, aborts
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+
+        File rmBranchFile = new File(Heads,branchName);
+        if (!rmBranchFile.exists()) {
+            // If a branch with the given name does not exist, aborts.
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+
+        rmBranchFile.delete();
     }
 
     public void reset(String commitId) {
