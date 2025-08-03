@@ -493,17 +493,16 @@ public class Repository {
     public void checkoutHelper(Commit cm,File fName) {
 
         if(cm.getFilesCommitBlob().containsKey(fName.getPath())) {
+
+            // get the file's relative path
+            // if the fName == "/proj2/ab.java" --getPath--> /proj2/ab.java
             String pathName = fName.getPath();
+            File cwdFile = new File(pathName);
             String hashcode = cm.getFilesCommitBlob().get(pathName);
             // get the file content(Blob) from .gitlet/objects
             File blobFile = getHashFile(OBJECTS,hashcode);
             byte[] blobContent = readContents(blobFile);
-
-            // get the file's relative path
-            // if the fName == "/proj2/ab.java" --getPath--> /proj2/ab.java
-
-            String relativePathKey = getRelativePath(CWD,fName);
-            File cwdFile = join(CWD,relativePathKey);
+            
 //            writeContents(cwdFile,blobContent);
             writeObject(cwdFile, blobContent); // automatically create the file if it doesn't exist
             return;
