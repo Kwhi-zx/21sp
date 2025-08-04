@@ -776,7 +776,14 @@ public class Repository {
                     // 2、These files should then all be automatically staged.
                     addCommand(fileInSet);
                 }
-                continue;
+
+                // case 8a:
+                // the contents of both are changed and different from other
+                if(!splitValue.equals(curValue) &&!splitValue.equals(givenValue) &&!curValue.equals(givenValue)) {
+                    byte[] conflictContent = case8action(curValue,givenValue);
+                    writeContents(fileInSet,conflictContent);
+                    System.out.println("Encountered a merge conflict.");
+                }
 
             } else if(!splitExist && !curExist && givenExist) {
                 // case 5:
@@ -790,7 +797,7 @@ public class Repository {
                 writeContents(fileInSet, givenContent);
                 // 2、These files should then all be automatically staged.
                 addCommand(fileInSet);
-                continue;
+
             } else if(splitExist && curExist && !givenExist) {
                 // case 6:
                 // Any files present at the split point,
@@ -802,7 +809,6 @@ public class Repository {
                     // untracked ?
                     rmCommand(fileInSet);
                 }
-
                 // case 8b
                 // the contents of one are changed and the other file is deleted
                 if(!curValue.equals(splitValue)) {
@@ -811,7 +817,7 @@ public class Repository {
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
                 }
-                continue;
+
             } else if(splitExist && !curExist && givenExist) {
                 // case 8b
                 // the contents of one are changed and the other file is deleted
@@ -823,32 +829,17 @@ public class Repository {
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
                 }
-                continue;
-            }
 
-            if(curExist && givenExist) {
+            } else if (!splitExist && curExist && givenExist) {
                 String curValue = curHashmap.get(pathName);
                 String givenValue = givenHashmap.get(pathName);
-                if(splitExist) {
-                    String splitValue = splitHashmap.get(pathName);
-                    if(!splitValue.equals(curValue)
-                     &&!splitValue.equals(givenValue)
-                     &&!curValue.equals(givenValue)) {
-                        // case 8a
-                        // the contents of both are changed and different from other
-                        byte[] conflictContent = case8action(curValue,givenValue);
-                        writeContents(fileInSet,conflictContent);
-                        System.out.println("Encountered a merge conflict.");
-                    }
-                }else {
-                    if(!curValue.equals(givenValue)) {
-                        // case 8c
-                        // the file was absent at the split point
-                        // and has different contents in the given and current branches.
-                        byte[] conflictContent = case8action(curValue,givenValue);
-                        writeContents(fileInSet,conflictContent);
-                        System.out.println("Encountered a merge conflict.");
-                    }
+                if(!curValue.equals(givenValue)) {
+                    // case 8c
+                    // the file was absent at the split point
+                    // and has different contents in the given and current branches.
+                    byte[] conflictContent = case8action(curValue,givenValue);
+                    writeContents(fileInSet,conflictContent);
+                    System.out.println("Encountered a merge conflict.");
                 }
             }
         }
