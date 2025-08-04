@@ -729,8 +729,11 @@ public class Repository {
         if(fileList != null) {
             for(String filename:fileList) {
                 File f = join(CWD,filename);
-                if(!curHashmap.containsKey(f.getPath())) {
-                    if(givenHashmap.containsKey(f.getPath())) {
+                String untrackedPath = f.getPath();
+                if(!curHashmap.containsKey(untrackedPath)) {
+                    boolean wouldBeOverwritten = givenHashmap.containsKey(untrackedPath);
+                    boolean wouldBeDeleted = splitHashmap.containsKey(untrackedPath) && !givenHashmap.containsKey(untrackedPath);
+                    if(wouldBeDeleted || wouldBeOverwritten) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         return;
                     }
@@ -752,6 +755,8 @@ public class Repository {
         allFilepathset.addAll(curHashmap.keySet());
         allFilepathset.addAll(givenHashmap.keySet());
         allFilepathset.addAll(splitHashmap.keySet());
+
+        boolean mergeConflict = false;
 
 
         // go through all the file path three-way have
@@ -779,10 +784,11 @@ public class Repository {
 
                 // case 8a:
                 // the contents of both are changed and different from other
-                if(!splitValue.equals(curValue) &&!splitValue.equals(givenValue) &&!curValue.equals(givenValue)) {
+                else if(!splitValue.equals(curValue) &&!splitValue.equals(givenValue) &&!curValue.equals(givenValue)) {
                     byte[] conflictContent = case8action(curValue,givenValue);
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
+                    mergeConflict = true;
                 }
 
             } else if(!splitExist && !curExist && givenExist) {
@@ -811,11 +817,12 @@ public class Repository {
                 }
                 // case 8b
                 // the contents of one are changed and the other file is deleted
-                if(!curValue.equals(splitValue)) {
+                else if(!curValue.equals(splitValue)) {
                     // Treat a deleted file in a branch as an empty file.
                     byte[] conflictContent = case8action(curValue,"");
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
+                    mergeConflict = true;
                 }
 
             } else if(splitExist && !curExist && givenExist) {
@@ -828,6 +835,7 @@ public class Repository {
                     byte[] conflictContent = case8action("",givenValue);
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
+                    mergeConflict = true;
                 }
 
             } else if (!splitExist && curExist && givenExist) {
@@ -840,8 +848,13 @@ public class Repository {
                     byte[] conflictContent = case8action(curValue,givenValue);
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
+                    mergeConflict = true;
                 }
             }
+        }
+        if(mergeConflict) {
+            // Do not create a commit.
+            return;
         }
         String mergeMsg = "Merged %s into %s";
         mergeCommit(String.format(mergeMsg,headPosition.getName(),branchName),
