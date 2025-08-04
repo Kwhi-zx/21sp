@@ -111,26 +111,137 @@ private String parent;
   	|---HEAD:refs/heads/xxx
   	|
   
-  
-  
   ~~~
   
   
 
+#### function
+
+* init()
+
+  ~~~java
+  // 在当前目录中创建一个新的 Gitlet 版本控制系统
+  // 如果当前目录中已经存在一个 Gitlet 版本控制系统，它应该中止。
+  
+  # 创建gitlet所需要的文件、目录
+  # 初始化Commit
+    
+      Commit initCommit  
+  1、初始化HEAD指针
+  --> writeContents() .gitlet/refs/heads/master to .gitlet/HEAD    
+  2、计算出Commit的哈希值，并将其存储到 ...    
+  --> Utils.serialize(initCommit);(byte[]类型)
+  --> hashcode = Utils.sha1(); // 计算出该Commit的哈希值 i.e f3af0eb43
+  --> writeContents() hashcode to /refs/heads/master  
+  3、存储initCommit
+  --> writeObjects() initCommit to .gitlet/objects/f3/af0eb43    
+  ~~~
+
+* add(File name)
+
+  ~~~java
+  // 将文件当前存在的副本添加到暂存区
+  // 如果文件不存在，则打印错误消息 File does not exist.
+  
+  1、暂存区 .gitlet/index
+  
+  ~~~
+
+* commit()
+
+  ~~~
+  
+  ~~~
+
+* rm()
+
+  ~~~
+  
+  ~~~
+
+* log()
+
+  ~~~
+  
+  ~~~
+
+* global-log()
+
+  ~~~
+  
+  ~~~
+
+* find()
+
+  ~~~
+  
+  ~~~
+
+  
+
+* status()
+
+  ~~~
+  
+  ~~~
+
+  
+
+* checkout()
+
+  ~~~
+  
+  ~~~
+
+  
+
+* branch()
+
+  ~~~
+  
+  ~~~
+
+  
+
+* rm-branch()
+
+  ~~~
+  
+  ~~~
+
+  
+
+* reset()
+
+  ~~~
+  
+  ~~~
+
+  
+
+* merge()
+
+  ~~~
+  
+  ~~~
+
 ### Utils
 
-~~~
+~~~java
 # blob的内容
 byte[] content = serialize();
-writeObject(file,content);
+// writeObject(file,content);
+writeContent(file,content);
 
+
+# hashcode
+writecontent(file,hashcode)
+    
+    
 # 数据结构
 Commit commit // Hashmap hm
 writeObject(file,commit/hm);
 readObject(file,Commit.class/Hashmap.class)
-
-# hashcode
-writecontent(file,hashcode)
 ~~~
 
 

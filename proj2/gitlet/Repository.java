@@ -173,8 +173,8 @@ public class Repository {
         if(!hashFile.exists()) {
             // if it doesn't exist --> create a new file
             // if it does exist --> same hashcode --> objects don't change
-           writeObject(hashFile,contents);
-//           writeContents(hashFile,contents);
+//           writeObject(hashFile,contents);
+           writeContents(hashFile,contents);
         }
 
         // store filePath and hashCode
@@ -502,9 +502,8 @@ public class Repository {
             // get the file content(Blob) from .gitlet/objects
             File blobFile = getHashFile(OBJECTS,hashcode);
             byte[] blobContent = readContents(blobFile);
-            
-//            writeContents(cwdFile,blobContent);
-            writeObject(cwdFile, blobContent); // automatically create the file if it doesn't exist
+
+            writeContents(cwdFile,blobContent); // automatically create the file if it doesn't exist
             return;
         }
         System.out.println("File does not exist in that commit.");
@@ -520,7 +519,7 @@ public class Repository {
             return;
         }
 
-        // get the cur Commit
+
         // .gitlet/HEAD  --> check if it is
         String headPositionStr = readContentsAsString(HEAD);
         // .gitlet/heads/master
@@ -530,6 +529,7 @@ public class Repository {
             return;
         }
 
+        // get the cur Commit
         String curCommitHashcode =readContentsAsString(curHeadPath);
         File curCommitFile = getHashFile(OBJECTS,curCommitHashcode);
         Commit curCommit = readObject(curCommitFile,Commit.class);
@@ -551,7 +551,8 @@ public class Repository {
             // 1、check if a working file is untracked in the current branch
             // 2、and would be overwritten by the checkout
             for(String filename:fileList) {
-                File f = new File(filename);
+//                File f = new File(filename);
+                File f = join(CWD,filename);
                 if(!curCommitTrackedF.containsKey(f.getPath())) {
                     if(checkoutHashmap.containsKey(f.getPath())) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
@@ -564,7 +565,8 @@ public class Repository {
             // 1、Any files that are tracked in the current branch
             // 2、but are not present in the checked-out branch are deleted.
             for (String filename : fileList) {
-                File f = new File(filename);
+//                File f = new File(filename);
+                File f = join(CWD,filename);
                 if(!checkoutHashmap.containsKey(f.getPath())
                 && curCommitTrackedF.containsKey(f.getPath())) {
                     // delete from the CWD
@@ -580,8 +582,8 @@ public class Repository {
 
                 // overwrite or create a new file
                 File cwdBlobFile = new File(checkoutHashKey);
-//                writeContents(cwdBlobFile,blobContent);
-                writeObject(cwdBlobFile,blobContent);
+                writeContents(cwdBlobFile,blobContent);
+//                writeObject(cwdBlobFile,blobContent);
             }
 
         }
@@ -634,12 +636,355 @@ public class Repository {
 
     public void reset(String commitId) {
 
+        // get the commitId branch name
+         List<String> branchList = plainFilenamesIn(Heads);
+         String branch = new String();
+         for(String branchName:branchList) {
+             File branchPath = join(Heads,branchName);
+             String branchHashcode = readContentsAsString(branchPath);
+             if(commitId.equals(branchHashcode)) {
+                 branch = branchName;
+                 break;
+             }
+         }
+         checkout(branch);
+
     }
 
+    /**
+     *  Merges files from the given branch into the current branch.
+     *
+     *  The case below do nothing
+     *
+     *  // case 2:
+     *  // Any files that have been modified in the current branch
+     *  // but not in the given branch since the split point should stay as they are.
+     *  // stay the same
+     *
+     *  // case 3a:
+     *  // Any files that have been modified in both the current and given branch in the same way
+     *  // are left unchanged by the merge
+     *
+     *  // case 3b:If a file was removed from both the current and given branch,
+     *  // but a file of the same name is present in the working directory,
+     *  // it is left alone and continues to be absent (not tracked nor staged) in the merge.
+     *
+     *  // case 4:
+     *  // Any files that were not present at the split point and
+     *  // are present only in the current branch
+     *  // should remain as they are.
+     *
+     *  // case 7:
+     *  // Any files present at the split point,
+     *  // unmodified in the given branch,
+     *  // and absent in the current branch should remain absent.
+     *
+     *
+     *
+     * */
     public void merge(String branchName) {
 
+        // get branchName newest commit
+        File branchPosition = join(Heads,branchName);
+        if(!branchPosition.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        String branchHashcode =readContentsAsString(branchPosition);
+        File branchCommitFile = getHashFile(OBJECTS,branchHashcode);
+        Commit branchCommit = readObject(branchCommitFile,Commit.class);
+
+        // get cur commit
+        String headPositionStr = readContentsAsString(HEAD);
+        File headPosition = new File(headPositionStr);
+        if(branchName.equals(headPosition.getName())) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+        String curCommitHashcode = readContentsAsString(headPosition);
+        File curCommitFile = getHashFile(OBJECTS,curCommitHashcode);
+        Commit curCommit = readObject(curCommitFile,Commit.class);
+
+        // find the split point
+        Commit splitPoint = findTheSplitPoint(curCommit,branchCommit);
+
+        // If the split point is the same commit as the given branch, then we do nothing
+        if(splitPoint.equals(branchCommit)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+        // If the split point is the current branch, then the effect is to check out the given branch
+        if(splitPoint.equals(curCommit)) {
+            checkout(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+        // get Commit Hashmap
+        HashMap<String,String> curHashmap = curCommit.getFilesCommitBlob();
+        HashMap<String,String> givenHashmap = branchCommit.getFilesCommitBlob();
+        HashMap<String,String> splitHashmap = splitPoint.getFilesCommitBlob();
+
+        // If an untracked file in the current commit would be overwritten or deleted by the merge
+        List<String> fileList = plainFilenamesIn(CWD);
+        if(fileList != null) {
+            for(String filename:fileList) {
+                File f = join(CWD,filename);
+                if(!curHashmap.containsKey(f.getPath())) {
+                    if(givenHashmap.containsKey(f.getPath())) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        return;
+                    }
+                }
+            }
+        }
+
+
+        // If there are staged additions or removals present
+        if(STAGING_AREA.length() != 0 || REMOVE_INDEX.length() != 0) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+
+        /** three-way merge */
+
+        // merge these hashmap key
+        Set<String> allFilepathset = new HashSet<>();
+        allFilepathset.addAll(curHashmap.keySet());
+        allFilepathset.addAll(givenHashmap.keySet());
+        allFilepathset.addAll(splitHashmap.keySet());
+
+
+        // go through all the file path three-way have
+        for(String pathName: allFilepathset) {
+            File fileInSet = new File(pathName); // exist or not?
+            boolean curExist = curHashmap.containsKey(pathName);
+            boolean givenExist = givenHashmap.containsKey(pathName);
+            boolean splitExist = splitHashmap.containsKey(pathName);
+
+            if (curExist && givenExist && splitExist) {
+                String curValue = curHashmap.get(pathName);
+                String givenValue = givenHashmap.get(pathName);
+                String splitValue = splitHashmap.get(pathName);
+                // case 1:
+                // Any files that have been modified in the given branch since the split point,
+                // but not modified in the current branch since the split point
+                if (curValue.equals(splitValue) && !curValue.equals(givenValue)) {
+                    // 1、should be changed to their versions in the given branch
+                    byte[] givenContent = getBlobContent(givenValue);
+                    // In the current branch(i.e master)
+                    writeContents(fileInSet, givenContent);
+                    // 2、These files should then all be automatically staged.
+                    addCommand(fileInSet);
+                }
+                continue;
+
+            } else if(!splitExist && !curExist && givenExist) {
+                // case 5:
+                // Any files that were not present at the split point
+                // and are present only in the given branch
+                // should be checked out and staged.
+                String givenValue = givenHashmap.get(pathName);
+                // checkout(newIncurFile) ??
+                byte[] givenContent = getBlobContent(givenValue);
+                // In the current branch(i.e master)
+                writeContents(fileInSet, givenContent);
+                // 2、These files should then all be automatically staged.
+                addCommand(fileInSet);
+                continue;
+            } else if(splitExist && curExist && !givenExist) {
+                // case 6:
+                // Any files present at the split point,
+                // unmodified in the current branch,
+                // and absent in the given branch should be removed (and untracked).
+                String curValue = curHashmap.get(pathName);
+                String splitValue = splitHashmap.get(pathName);
+                if(curValue.equals(splitValue)) {
+                    // untracked ?
+                    rmCommand(fileInSet);
+                }
+
+                // case 8b
+                // the contents of one are changed and the other file is deleted
+                if(!curValue.equals(splitValue)) {
+                    // Treat a deleted file in a branch as an empty file.
+                    byte[] conflictContent = case8action(curValue,"");
+                    writeContents(fileInSet,conflictContent);
+                    System.out.println("Encountered a merge conflict.");
+                }
+                continue;
+            } else if(splitExist && !curExist && givenExist) {
+                // case 8b
+                // the contents of one are changed and the other file is deleted
+                String givenValue = givenHashmap.get(pathName);
+                String splitValue = splitHashmap.get(pathName);
+                if(!givenValue.equals(splitValue)) {
+                    // Treat a deleted file in a branch as an empty file.
+                    byte[] conflictContent = case8action("",givenValue);
+                    writeContents(fileInSet,conflictContent);
+                    System.out.println("Encountered a merge conflict.");
+                }
+                continue;
+            }
+
+            if(curExist && givenExist) {
+                String curValue = curHashmap.get(pathName);
+                String givenValue = givenHashmap.get(pathName);
+                if(splitExist) {
+                    String splitValue = splitHashmap.get(pathName);
+                    if(!splitValue.equals(curValue)
+                     &&!splitValue.equals(givenValue)
+                     &&!curValue.equals(givenValue)) {
+                        // case 8a
+                        // the contents of both are changed and different from other
+                        byte[] conflictContent = case8action(curValue,givenValue);
+                        writeContents(fileInSet,conflictContent);
+                        System.out.println("Encountered a merge conflict.");
+                    }
+                }else {
+                    if(!curValue.equals(givenValue)) {
+                        // case 8c
+                        // the file was absent at the split point
+                        // and has different contents in the given and current branches.
+                        byte[] conflictContent = case8action(curValue,givenValue);
+                        writeContents(fileInSet,conflictContent);
+                        System.out.println("Encountered a merge conflict.");
+                    }
+                }
+            }
+        }
+        String mergeMsg = "Merged %s into %s";
+        mergeCommit(String.format(mergeMsg,headPosition.getName(),branchName),
+                    curCommit,
+                    headPosition.getName(),
+                    curCommitHashcode,
+                    branchHashcode);
     }
 
+    // Merge commits differ from other commits: they record as parents
+    // both the head of the current branch (called the first parent) and
+    // the head of the branch given on the command line to be merged in.
+    public void mergeCommit(String msg,Commit curCommit,String curBranch,String curHashcode,String givenHashcode) {
+
+        Commit newCommit = new Commit();
+        // set timeStamp and message  --> MetaData
+        Date date = new Date(); // real time
+        newCommit.setTimestamp(date);
+        newCommit.setMessage(msg);
+        newCommit.setMerged(true);
+
+        // set parent --> parent
+        String parentCommitHash = curHashcode.substring(0,7) + " " + givenHashcode.substring(0,7);
+        newCommit.setParent(parentCommitHash);
+        newCommit.setFilesandBlob(curCommit.getFilesCommitBlob());
+
+
+        // refresh the inherentHashMap
+        HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
+
+        // add
+        HashMap<String,String> newStagingInfo = new HashMap<>();
+        newStagingInfo = Utils.readObject(STAGING_AREA,HashMap.class);
+        for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
+            // go through the STAGING AREA and overwrite
+            String filePath = entry.getKey();
+            String fileHashCode = entry.getValue();
+            inherentHashMap.put(filePath,fileHashCode); // overwrite
+        }
+
+        // remove
+        HashSet<String> newRemoveInfo = new HashSet<>();
+        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
+        for(String pathName:newRemoveInfo) {
+            inherentHashMap.remove(pathName);
+        }
+
+        // .git/objects --> store the newCommit
+        byte[] serializedNewCommit = Utils.serialize(newCommit);
+        String newCommitHashcode = Utils.sha1(serializedNewCommit);
+        String newCommitHashDirName = newCommitHashcode.substring(0,2); // get first 2 chars for the file name
+        String newCommitHashFileName = newCommitHashcode.substring(2);
+        // .git/objects/xx
+        File newCommitHashFileDir = join(OBJECTS,newCommitHashDirName);
+        if (!newCommitHashFileDir.exists()) {
+            newCommitHashFileDir.mkdir();
+        }
+        // .git/objects/xx/...
+        File newCommitHashFile = join(newCommitHashFileDir,newCommitHashFileName);
+        if(!newCommitHashFile.exists()) {
+            // if it doesn't exist --> create a new file
+            // if it does exist --> same hashcode --> objects don't change
+            // don't serialize
+            writeObject(newCommitHashFile,newCommit);
+        }
+
+        //.git/index  --> clear
+        HashMap<String,String> emptyHashmap = new HashMap<>();
+        writeObject(STAGING_AREA,emptyHashmap);
+
+        //.git/rm_index --> clear
+        HashSet<String> emptyHashset = new HashSet<>();
+        writeObject(REMOVE_INDEX,emptyHashset);
+
+        //.git/refs/heads/master  --> change HEAD
+        File headFile = join(Heads,curBranch);
+        writeContents(headFile,newCommitHashcode);
+
+
+    }
+
+    public byte[] case8action(String curHashcode,String givenHashcode) {
+        byte[] curContent = null;
+        byte[] givenContent = null;
+        if(!curHashcode.isEmpty()) {
+            curContent = getBlobContent(curHashcode);
+        }
+        if(!givenHashcode.isEmpty()) {
+            givenContent = getBlobContent(givenHashcode);
+        }
+
+        String curContentStr = (curContent == null) ? "" : new String(curContent);
+        String givenContentStr = (givenContent == null) ? "" : new String(givenContent);
+
+        StringBuilder conflictBuilder = new StringBuilder();
+        conflictBuilder.append("<<<<<<< HEAD");
+        conflictBuilder.append(curContentStr);
+        conflictBuilder.append("=======");
+        conflictBuilder.append(givenContentStr);
+        conflictBuilder.append(">>>>>>>");
+
+        return Utils.serialize(conflictBuilder);
+    }
+
+    public Commit findTheSplitPoint(Commit cur,Commit given) {
+
+        Commit splitPoint = new Commit();
+        // find the cur parent
+        String curParentHashcode = cur.getParent();
+        Commit curParent = getParentCommit(curParentHashcode);
+        // find the given parent
+        String givenParentHashcode = given.getParent();
+        Commit givenParent = getParentCommit(givenParentHashcode);
+
+        while(curParent != null && givenParent != null) {
+
+            if(curParent.equals(givenParent)) {
+                splitPoint = curParent;
+                break;
+            }
+
+            curParentHashcode = curParent.getParent();
+            curParent = getParentCommit(curParentHashcode);
+            givenParentHashcode = givenParent.getParent();
+            givenParent = getParentCommit(givenParentHashcode);
+
+        }
+        return splitPoint;
+    }
+
+    public Commit getParentCommit(String parentHashcode) {
+        File ParentFile = getHashFile(OBJECTS,parentHashcode);
+        return readObject(ParentFile,Commit.class);
+    }
 
 
     public String getHeadHashCode() {
@@ -656,12 +1001,18 @@ public class Repository {
         String headHashFileName = hashcode.substring(2);
         return join(path,headHashDirName,headHashFileName);
     }
-    public String getRelativePath(File mainPath,File name) {
-        Path pathMain = mainPath.toPath(); // CWD/OBJECTS...
-        Path inputPath = name.toPath();    // file name
-        Path relativePath = pathMain.relativize(inputPath);
-        return relativePath.toString().replace('\\', '/');
+
+    public byte[] getBlobContent(String hashcode) {
+        String headHashDirName = hashcode.substring(0,2);
+        String headHashFileName = hashcode.substring(2);
+        File blobFile = join(OBJECTS,headHashDirName,headHashFileName);
+        return readContents(blobFile);
     }
+
+
+
+
+
 
 
 

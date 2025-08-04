@@ -108,15 +108,37 @@ public class Main {
                 repo.branch(branchName);
                 break;
             }
-            case "rm-branch":
+            case "rm-branch": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please entry a branch name");
+                    System.exit(0);
+                }
+                String branchName = args[1];
+                repo.rm_branch(branchName);
                 break;
-            case "reset":
+            }
+            case "reset": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please entry a commit id");
+                    System.exit(0);
+                }
+                String commitId = args[1];
+                repo.reset(commitId);
                 break;
-            case "merge":
+            }
+            case "merge": {
+                if(args[1].isEmpty()) {
+                    System.out.println("Please entry a branch name");
+                    System.exit(0);
+                }
+                String branchName = args[1];
+                repo.merge(branchName);
                 break;
-            default:
+            }
+            default: {
                 System.out.println("No such a command.");
                 System.exit(0);
+            }
         }
     }
 }

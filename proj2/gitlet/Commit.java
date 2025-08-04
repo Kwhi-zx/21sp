@@ -30,14 +30,18 @@ public class Commit implements Serializable {
     // instance
     private Date timestamp;
     private String parent;
+    private boolean merged;
     private HashMap<String,String> filesandBlob; // hello.txt && hashcode
+
 
     /* TODO: fill in the rest of this class. */
     public Commit() {
         this.timestamp = new Date(0); // 00:00:00 UTC, Thursday, 1 January 1970
         this.message = "initial commit";
         this.parent = null;
+        this.merged = false;
         this.filesandBlob = new HashMap<>();
+
     }
 
     /**  get method */
@@ -50,9 +54,11 @@ public class Commit implements Serializable {
     public String getParent() {
         return this.parent;
     }
+    public boolean getMerge() { return this.merged;}
     public HashMap<String, String> getFilesCommitBlob() {
         return filesandBlob;
     }
+
 
 
     /** set method*/
@@ -65,6 +71,7 @@ public class Commit implements Serializable {
     public void setParent(String parent) {
         this.parent = parent;
     }
+    public void setMerged(boolean isMerged) { this.merged = isMerged; }
 
 
     public void setFilesandBlob(HashMap<String, String> hashMap) {
