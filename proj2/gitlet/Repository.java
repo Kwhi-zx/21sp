@@ -326,43 +326,6 @@ public class Repository {
         }
     }
 
-//    public void log() {
-//
-//        // define string format
-//        String logFormat = "===";
-////        String formatString = "commit %s%nDate: %tc%n%s%n";
-//
-//        // Linear History
-//        // The HEAD
-//        String headHashcode = getHeadHashCode();
-//        File headHashFile = getHashFile(OBJECTS,headHashcode);
-//        Commit headCommit = Utils.readObject(headHashFile,Commit.class);
-//        String output = formatWithStringBuilder(headHashcode,
-//                headCommit.getTimestamp(),
-//                headCommit.getMessage(),
-//                headCommit.getMerge(),
-//                headCommit.getParent());
-//
-//        System.out.println(logFormat);
-//        System.out.println(output);
-//
-//        // iterate the parent
-//        String childHashcode = headCommit.getParent();
-//        while (childHashcode !=null) {
-//            System.out.println(logFormat); // ===
-//            File childHashFile = getHashFile(OBJECTS, childHashcode);
-//            Commit childCommit = Utils.readObject(childHashFile, Commit.class);
-//            String childOutput = formatWithStringBuilder(childHashcode,
-//                    childCommit.getTimestamp(),
-//                    childCommit.getMessage(),
-//                    childCommit.getMerge(),
-//                    childCommit.getParent());
-//            System.out.println(childOutput);
-//            childHashcode = childCommit.getParent();
-//        }
-//
-//    }
-
     public void log() {
         String logFormat = "===";
         String curHashcode = getHeadHashCode();
@@ -498,6 +461,7 @@ public class Repository {
                 System.out.println(branch);
             }
         }
+        System.out.print("\n");
 
         /** Staged Files */
         System.out.println(str2);
@@ -511,6 +475,8 @@ public class Repository {
             }
         }
 
+        System.out.print("\n");
+
         /** Removed Files*/
         System.out.println(str3);
         HashSet<String> removeFile = new HashSet<>();
@@ -522,6 +488,8 @@ public class Repository {
                 System.out.println(p.getFileName());
             }
         }
+
+        System.out.print("\n");
 
         List<String> filesList = plainFilenamesIn(CWD);
         List<String> modificationList = new ArrayList<>();
@@ -589,6 +557,7 @@ public class Repository {
         for(String str:modificationList) {
             System.out.println(str);
         }
+        System.out.print("\n");
 
 
         /** Untracked Files */
@@ -603,6 +572,7 @@ public class Repository {
                 }
             }
         }
+        System.out.print("\n");
     }
 
 
