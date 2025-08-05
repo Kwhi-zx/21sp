@@ -366,7 +366,6 @@ public class Repository {
     public void log() {
         String logFormat = "===";
         String curHashcode = getHeadHashCode();
-        System.out.println(logFormat);
         while(curHashcode != null) {
             System.out.println(logFormat);
             File curHashFile = getHashFile(OBJECTS,curHashcode);
@@ -404,7 +403,7 @@ public class Repository {
                                     logCommit.getMerge(),
                                     logCommit.getParents());
                             System.out.println(logFormat);
-                            System.out.println(output);
+                            System.out.print(output);
                         } catch (Exception e) {
                             // Just ignore it and continue to the next file.
                         }
