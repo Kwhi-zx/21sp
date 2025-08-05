@@ -327,18 +327,25 @@ public class Repository {
 
         // define string format
         String logFormat = "===";
-        String formatString = "commit %s%nDate: %tc%n%s%n";
+//        String formatString = "commit %s%nDate: %tc%n%s%n";
 
         // Linear History
         // The HEAD
         String headHashcode = getHeadHashCode();
         File headHashFile = getHashFile(OBJECTS,headHashcode);
         Commit headCommit = Utils.readObject(headHashFile,Commit.class);
+        String output = formatWithStringBuilder(headHashcode,
+                headCommit.getTimestamp(),
+                headCommit.getMessage(),
+                headCommit.getMerge(),
+                headCommit.getParent());
 
-        String output = String.format(formatString,
-                                        headHashcode,
-                                        headCommit.getTimestamp(),
-                                        headCommit.getMessage());
+//            output = String.format(formatString,
+//                    headHashcode,
+//                    headCommit.getTimestamp(),
+//                    headCommit.getMessage());
+
+
         System.out.println(logFormat);
         System.out.println(output);
 
@@ -348,10 +355,15 @@ public class Repository {
             System.out.println(logFormat); // ===
             File childHashFile = getHashFile(OBJECTS, childHashcode);
             Commit childCommit = Utils.readObject(childHashFile, Commit.class);
-            String childOutput = String.format(formatString,
-                                                childHashcode,
-                                                childCommit.getTimestamp(),
-                                                childCommit.getMessage());
+//            String childOutput = String.format(formatString,
+//                                                childHashcode,
+//                                                childCommit.getTimestamp(),
+//                                                childCommit.getMessage());
+            String childOutput = formatWithStringBuilder(childHashcode,
+                    childCommit.getTimestamp(),
+                    childCommit.getMessage(),
+                    childCommit.getMerge(),
+                    childCommit.getParent());
             System.out.println(childOutput);
             childHashcode = childCommit.getParent();
         }
@@ -365,7 +377,7 @@ public class Repository {
         // displays information about all commits ever made.
         // The order of the commits does not matter.
         String logFormat = "===";
-        String formatString = "commit %s%nDate: %tc%n%s%n";
+//        String formatString = "commit %s%nDate: %tc%n%s%n";
 
         // get .git/objects/xx(dir)
         File[] filesList = OBJECTS.listFiles();
@@ -377,10 +389,15 @@ public class Repository {
                         try {
                             Commit logCommit = readObject(file,Commit.class);
                             String hashcode = dir.getName() + filename; //  /xx + /...
-                            String output = String.format(formatString,
-                                    hashcode,
+//                            String output = String.format(formatString,
+//                                    hashcode,
+//                                    logCommit.getTimestamp(),
+//                                    logCommit.getMessage());
+                            String output = formatWithStringBuilder(hashcode,
                                     logCommit.getTimestamp(),
-                                    logCommit.getMessage());
+                                    logCommit.getMessage(),
+                                    logCommit.getMerge(),
+                                    logCommit.getParent());
                             System.out.println(logFormat);
                             System.out.println(output);
                         } catch (Exception e) {
@@ -390,6 +407,18 @@ public class Repository {
             }
         }
 
+    }
+
+    public String formatWithStringBuilder(String hashcode,Date time,String msg,boolean isMerged,String parent) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("commit %s%n", hashcode));
+        if(isMerged) {
+            sb.append(String.format("Merge: %s%n", parent));
+        }
+        sb.append(String.format("Date: %tc%n",time));
+        sb.append(String.format("%s%n",msg));
+
+        return sb.toString();
     }
 
     public void find(String message) {
