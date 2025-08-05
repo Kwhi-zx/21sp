@@ -422,7 +422,20 @@ public class Repository {
             String parentCommitHash = parent1Hashcode.substring(0,7) + " " + parent2Hashcode.substring(0,7);
             sb.append(String.format("Merge: %s%n", parentCommitHash));
         }
-        sb.append(String.format("Date: %tc%n",time));
+        /**
+         *
+         *  %ta: Week
+         *  %tb: Month
+         *  %td: Day of the Month
+         *  %tT: 24-hour time
+         *  %tY: Four-digit year
+         *  %tz: RFC 822 numeric time zone offset (e.g., "-0700")
+         *
+         * */
+        String formattedDate = String.format("Date: %ta %tb %td %tT %tY %tz",
+                                                      time,time,time,time,time,time);
+        sb.append(formattedDate).append("\n");
+//        sb.append(String.format("Date: %tz%n",time));
         sb.append(String.format("%s%n",msg));
 
         return sb.toString();
