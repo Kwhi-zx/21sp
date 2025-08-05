@@ -117,9 +117,10 @@ public class Repository {
     public void addCommand(File name) {
 
         // the cur file
-        byte[] contents = readContents(name);
+        byte[] contents = Utils.readContents(name);
         String hashCode = Utils.sha1(contents); // sha1 contents
         String fileRelativePaths = name.getPath();
+
 
         String hashDirName = hashCode.substring(0,2); // get first 2 chars for the file name
         String hashFileName = hashCode.substring(2);
@@ -134,7 +135,7 @@ public class Repository {
         // .git/rm_index which store the file path
         HashSet<String> rmHashset = new HashSet<>();
         if(REMOVE_INDEX.length() != 0) {
-            rmHashset = readObject(REMOVE_INDEX,HashSet.class);
+            rmHashset = Utils.readObject(REMOVE_INDEX,HashSet.class);
         }
 
         // Get the cur commit
@@ -174,7 +175,7 @@ public class Repository {
             // if it doesn't exist --> create a new file
             // if it does exist --> same hashcode --> objects don't change
 //           writeObject(hashFile,contents);
-           writeContents(hashFile,contents);
+           Utils.writeContents(hashFile,contents);
         }
 
         // store filePath and hashCode
@@ -198,7 +199,7 @@ public class Repository {
             // remove() already check if path exist
             rmHashset.remove(fileRelativePaths);
         }
-        writeObject(REMOVE_INDEX,rmHashset);
+        Utils.writeObject(REMOVE_INDEX,rmHashset);
     }
 
     @SuppressWarnings("unchecked")
@@ -500,7 +501,8 @@ public class Repository {
         // case 4: Not staged for removal, but tracked in the current commit and deleted from the working directory.
         if (filesList != null) {
             for(String filename:filesList) {
-                File f = join(CWD,filename);
+//                File f = join(CWD,filename);  // wrong !!!
+                File f = new File(filename);
                 byte[] newFileContent = Utils.readContents(f);
                 String newHashcode = Utils.sha1(newFileContent);
                 // case 1:Tracked in the current commit
@@ -566,7 +568,8 @@ public class Repository {
 
         if (filesList != null) {
             for(String filename:filesList) {
-                File f = join(CWD,filename);
+//                File f = join(CWD,filename);  // wrong !!!
+                File f = new File(filename);
                 if(!commitHashmap.containsKey(f.getPath()) && !stageFile.containsKey(f.getPath())) {
                     System.out.println(f.getName());
                 }

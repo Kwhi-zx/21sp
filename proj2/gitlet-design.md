@@ -117,6 +117,14 @@ private String parent;
 
 #### function
 
+* ~~~
+  ⭐：因为代码运行在CWD下，文件一般以相对路径的形式出现，i.e: wug.txt, files/wug.txt
+  此时，f.getPath() 获得的也是相对路径，i.e: wug.txt, files/wug.txt
+  因此，对于需要与存储的相对路径比较的文件名称，不用join(CWD,filename)
+  ~~~
+
+* 
+
 * init()
 
   ~~~java
@@ -143,8 +151,16 @@ private String parent;
   // 将文件当前存在的副本添加到暂存区
   // 如果文件不存在，则打印错误消息 File does not exist.
   
-  1、暂存区 .gitlet/index
+  // 获得文件内容、哈希值、文件路径
+  // name如果是以相对路径写入，则获取的路径也是相对路径
+  byte[] contents = readContents(name);
+  String hashcode = Utils.sha1(contents);
+  String path = name.getPath(); 
   
+  // logic pic
+  
+      read from STAGING_AREA or REMOVE_INDEX
+  --> 
   ~~~
 
 * commit()
