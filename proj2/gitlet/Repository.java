@@ -375,7 +375,7 @@ public class Repository {
                     curCommit.getMessage(),
                     curCommit.getMerge(),
                     curCommit.getParents());
-            System.out.print(curOutput);
+            System.out.println(curOutput);
             curHashcode = curCommit.getFirstParent(); // inherent the first parent
         }
     }
@@ -403,7 +403,7 @@ public class Repository {
                                     logCommit.getMerge(),
                                     logCommit.getParents());
                             System.out.println(logFormat);
-                            System.out.print(output);
+                            System.out.println(output);
                         } catch (Exception e) {
                             // Just ignore it and continue to the next file.
                         }
@@ -510,17 +510,16 @@ public class Repository {
         System.out.println(str4);
 
 
-        /** TODO:Untracked Files */
+        /** Untracked Files */
         System.out.println(str5);
         List<String> filesList = plainFilenamesIn(CWD);
         if (filesList != null) {
             // 1、check if a working file is untracked in the current branch
             // 2、and would be overwritten by the checkout
             for(String filename:filesList) {
-//                File f = new File(filename);
                 File f = join(CWD,filename);
                 if(!commitHashmap.containsKey(f.getPath())) {
-
+                    System.out.println(f.getName());
                 }
             }
             }
