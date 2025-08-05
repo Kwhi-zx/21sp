@@ -216,7 +216,10 @@ public class Repository {
         File parentContentFile = getHashFile(OBJECTS,parentCommitHash);
         Commit parentCommit = Utils.readObject(parentContentFile,Commit.class);
 
-        newCommit.setParent(parentCommitHash);
+        List<String> parentList = new ArrayList<>();
+        parentList.add(parentCommitHash);
+        newCommit.setParents(parentList);
+
         newCommit.setFilesandBlob(parentCommit.getFilesCommitBlob());
 
         // .git/index   .git/rm_index
@@ -323,53 +326,59 @@ public class Repository {
         }
     }
 
+//    public void log() {
+//
+//        // define string format
+//        String logFormat = "===";
+////        String formatString = "commit %s%nDate: %tc%n%s%n";
+//
+//        // Linear History
+//        // The HEAD
+//        String headHashcode = getHeadHashCode();
+//        File headHashFile = getHashFile(OBJECTS,headHashcode);
+//        Commit headCommit = Utils.readObject(headHashFile,Commit.class);
+//        String output = formatWithStringBuilder(headHashcode,
+//                headCommit.getTimestamp(),
+//                headCommit.getMessage(),
+//                headCommit.getMerge(),
+//                headCommit.getParent());
+//
+//        System.out.println(logFormat);
+//        System.out.println(output);
+//
+//        // iterate the parent
+//        String childHashcode = headCommit.getParent();
+//        while (childHashcode !=null) {
+//            System.out.println(logFormat); // ===
+//            File childHashFile = getHashFile(OBJECTS, childHashcode);
+//            Commit childCommit = Utils.readObject(childHashFile, Commit.class);
+//            String childOutput = formatWithStringBuilder(childHashcode,
+//                    childCommit.getTimestamp(),
+//                    childCommit.getMessage(),
+//                    childCommit.getMerge(),
+//                    childCommit.getParent());
+//            System.out.println(childOutput);
+//            childHashcode = childCommit.getParent();
+//        }
+//
+//    }
+
     public void log() {
-
-        // define string format
         String logFormat = "===";
-//        String formatString = "commit %s%nDate: %tc%n%s%n";
-
-        // Linear History
-        // The HEAD
-        String headHashcode = getHeadHashCode();
-        File headHashFile = getHashFile(OBJECTS,headHashcode);
-        Commit headCommit = Utils.readObject(headHashFile,Commit.class);
-        String output = formatWithStringBuilder(headHashcode,
-                headCommit.getTimestamp(),
-                headCommit.getMessage(),
-                headCommit.getMerge(),
-                headCommit.getParent());
-
-//            output = String.format(formatString,
-//                    headHashcode,
-//                    headCommit.getTimestamp(),
-//                    headCommit.getMessage());
-
-
+        String curHashcode = getHeadHashCode();
         System.out.println(logFormat);
-        System.out.println(output);
-
-        // iterate the parent
-        String childHashcode = headCommit.getParent();
-        while (childHashcode !=null) {
-            System.out.println(logFormat); // ===
-            File childHashFile = getHashFile(OBJECTS, childHashcode);
-            Commit childCommit = Utils.readObject(childHashFile, Commit.class);
-//            String childOutput = String.format(formatString,
-//                                                childHashcode,
-//                                                childCommit.getTimestamp(),
-//                                                childCommit.getMessage());
-            String childOutput = formatWithStringBuilder(childHashcode,
-                    childCommit.getTimestamp(),
-                    childCommit.getMessage(),
-                    childCommit.getMerge(),
-                    childCommit.getParent());
-            System.out.println(childOutput);
-            childHashcode = childCommit.getParent();
+        while(curHashcode != null) {
+            System.out.println(logFormat);
+            File curHashFile = getHashFile(OBJECTS,curHashcode);
+            Commit curCommit = Utils.readObject(curHashFile, Commit.class);
+            String curOutput = formatWithStringBuilder(curHashcode,
+                    curCommit.getTimestamp(),
+                    curCommit.getMessage(),
+                    curCommit.getMerge(),
+                    curCommit.getParents());
+            System.out.print(curOutput);
+            curHashcode = curCommit.getFirstParent(); // inherent the first parent
         }
-
-
-        //TODO: merge
     }
 
     public void globalLog() {
@@ -389,15 +398,11 @@ public class Repository {
                         try {
                             Commit logCommit = readObject(file,Commit.class);
                             String hashcode = dir.getName() + filename; //  /xx + /...
-//                            String output = String.format(formatString,
-//                                    hashcode,
-//                                    logCommit.getTimestamp(),
-//                                    logCommit.getMessage());
                             String output = formatWithStringBuilder(hashcode,
                                     logCommit.getTimestamp(),
                                     logCommit.getMessage(),
                                     logCommit.getMerge(),
-                                    logCommit.getParent());
+                                    logCommit.getParents());
                             System.out.println(logFormat);
                             System.out.println(output);
                         } catch (Exception e) {
@@ -409,11 +414,14 @@ public class Repository {
 
     }
 
-    public String formatWithStringBuilder(String hashcode,Date time,String msg,boolean isMerged,String parent) {
+    public String formatWithStringBuilder(String hashcode,Date time,String msg,boolean isMerged,List<String> parentsList) {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("commit %s%n", hashcode));
         if(isMerged) {
-            sb.append(String.format("Merge: %s%n", parent));
+            String parent1Hashcode = parentsList.get(0);
+            String parent2Hashcode = parentsList.get(1);
+            String parentCommitHash = parent1Hashcode.substring(0,7) + " " + parent2Hashcode.substring(0,7);
+            sb.append(String.format("Merge: %s%n", parentCommitHash));
         }
         sb.append(String.format("Date: %tc%n",time));
         sb.append(String.format("%s%n",msg));
@@ -458,9 +466,14 @@ public class Repository {
         String str4 = "=== Modifications Not Staged For Commit ===";
         String str5 = "=== Untracked Files ===";
 
+        // head Commit
+        String headHashcode = getHeadHashCode();
+        File headFile = getHashFile(OBJECTS,headHashcode);
+        Commit headCommit = readObject(headFile,Commit.class);
+        HashMap<String,String> commitHashmap = headCommit.getFilesCommitBlob();
+
         /** Branches */
         List<String> branchesList = plainFilenamesIn(Heads); // list:[master、main、skeleton...]
-        String headHashcode = getHeadHashCode();
         for(String branch:branchesList) {
             System.out.println(str1);
             File bfile = join(Heads,branch);
@@ -497,8 +510,21 @@ public class Repository {
         /** TODO:Modifications Not Staged For Commit */
         System.out.println(str4);
 
+
         /** TODO:Untracked Files */
         System.out.println(str5);
+        List<String> filesList = plainFilenamesIn(CWD);
+        if (filesList != null) {
+            // 1、check if a working file is untracked in the current branch
+            // 2、and would be overwritten by the checkout
+            for(String filename:filesList) {
+//                File f = new File(filename);
+                File f = join(CWD,filename);
+                if(!commitHashmap.containsKey(f.getPath())) {
+
+                }
+            }
+            }
     }
 
     public void checkout(File fName) {
@@ -903,11 +929,13 @@ public class Repository {
         Date date = new Date(); // real time
         newCommit.setTimestamp(date);
         newCommit.setMessage(msg);
-        newCommit.setMerged(true);
+
 
         // set parent --> parent
-        String parentCommitHash = curHashcode.substring(0,7) + " " + givenHashcode.substring(0,7);
-        newCommit.setParent(parentCommitHash);
+        List<String> parentList = new ArrayList<>();
+        parentList.add(curHashcode);
+        parentList.add(givenHashcode);
+        newCommit.setParents(parentList);
         newCommit.setFilesandBlob(curCommit.getFilesCommitBlob());
 
 
@@ -992,10 +1020,10 @@ public class Repository {
 
         Commit splitPoint = new Commit();
         // find the cur parent
-        String curParentHashcode = cur.getParent();
+        String curParentHashcode = cur.getFirstParent();
         Commit curParent = getParentCommit(curParentHashcode);
         // find the given parent
-        String givenParentHashcode = given.getParent();
+        String givenParentHashcode = given.getFirstParent();
         Commit givenParent = getParentCommit(givenParentHashcode);
 
         while(curParent != null && givenParent != null) {
@@ -1005,9 +1033,9 @@ public class Repository {
                 break;
             }
 
-            curParentHashcode = curParent.getParent();
+            curParentHashcode = curParent.getFirstParent();
             curParent = getParentCommit(curParentHashcode);
-            givenParentHashcode = givenParent.getParent();
+            givenParentHashcode = givenParent.getFirstParent();
             givenParent = getParentCommit(givenParentHashcode);
 
         }
