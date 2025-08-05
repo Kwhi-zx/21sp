@@ -475,14 +475,14 @@ public class Repository {
 
         /** Branches */
         List<String> branchesList = plainFilenamesIn(Heads); // list:[master、main、skeleton...]
+        String headRef = readContentsAsString(HEAD); // refs/heads/...
+        String curHeadBranchName = headRef.substring(headRef.lastIndexOf('/') + 1);
+        System.out.println(str1);
         for(String branch:branchesList) {
-            System.out.println(str1);
-            File bfile = join(Heads,branch);
-            String bHashcode = readContentsAsString(bfile);
-            if(headHashcode.equals(bHashcode)) {
-                System.out.println("*"+branch+"%n");
+            if(branch.equals(curHeadBranchName)) {
+                System.out.println("*"+branch);
             }else {
-                System.out.println(branch+"%n");
+                System.out.println(branch);
             }
         }
 
@@ -494,7 +494,7 @@ public class Repository {
             for (Map.Entry<String, String> entry : stageFile.entrySet()) {
                 String stagePath = entry.getKey(); // absolute path
                 File stagefile = new File(stagePath);
-                System.out.println(stagefile.getName()+"%n");
+                System.out.println(stagefile.getName());
             }
         }
 
@@ -506,17 +506,17 @@ public class Repository {
             for(String path:removeFile) {
                 // it has been removed
                 Path p = Paths.get(path);
-                System.out.println(p.getFileName()+"%n");
+                System.out.println(p.getFileName());
             }
         }
 
         List<String> filesList = plainFilenamesIn(CWD);
+        List<String> modificationList = new ArrayList<>();
         /** Modifications Not Staged For Commit */
         // case 1: Tracked in the current commit, changed in the working directory, but not staged;
         // case 2: Staged for addition, but with different contents than in the working directory;
         // case 3: Staged for addition, but deleted in the working directory;
         // case 4: Not staged for removal, but tracked in the current commit and deleted from the working directory.
-        System.out.println(str4);
         if (filesList != null) {
             for(String filename:filesList) {
                 File f = join(CWD,filename);
@@ -529,7 +529,7 @@ public class Repository {
                     if(!oldHashcode.equals(newHashcode)) {
                         if(stageFile.isEmpty() || !stageFile.containsKey(f.getPath())) {
                             // but not staged;
-                            System.out.println(f.getName() + " (modified)");
+                            modificationList.add(f.getName() + " (modified)");
                             continue;
                         }
                     }
@@ -540,7 +540,7 @@ public class Repository {
                     String oldHashcodeInStage = stageFile.get(f.getPath());
                     if(!newHashcode.equals(oldHashcodeInStage)) {
                         // but with different contents than in the working directory;
-                        System.out.println(f.getName() + " (modified)");
+                        modificationList.add(f.getName() + " (modified)");
                     }
                 }
 
@@ -555,7 +555,7 @@ public class Repository {
                 File stagefile = new File(stagePath);
                 if(!stagefile.exists()) {
                     // but deleted in the working directory;
-                    System.out.println(stagefile.getName() + " (deleted)");
+                    modificationList.add(stagefile.getName() + " (deleted)");
                 }
             }
         }
@@ -567,21 +567,25 @@ public class Repository {
             if(!removeFile.contains(filename) && !f.exists()) {
                 // Not staged for removal,
                 // // deleted from the working directory.
-                System.out.println(f.getName() + " (deleted)");
+                modificationList.add(f.getName() + " (deleted)");
             }
         }
 
+        System.out.println(str4);
+        // print out all the case
+        for(String str:modificationList) {
+            System.out.println(str);
+        }
 
 
         /** Untracked Files */
+        // untracked : not commit and not stage
         System.out.println(str5);
 
         if (filesList != null) {
-            // 1、check if a working file is untracked in the current branch
-            // 2、and would be overwritten by the checkout
             for(String filename:filesList) {
                 File f = join(CWD,filename);
-                if(!commitHashmap.containsKey(f.getPath())) {
+                if(!commitHashmap.containsKey(f.getPath()) && !stageFile.containsKey(f.getPath())) {
                     System.out.println(f.getName());
                 }
             }
