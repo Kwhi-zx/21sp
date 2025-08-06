@@ -36,7 +36,7 @@ public class Main {
             }
             case "commit": {
                 if(args[1].isEmpty()) {
-                    System.out.println("Please entry commit message!");
+                    System.out.println("Please enter a commit message.");
                     System.exit(0);
                 }
                 String message = args[1];

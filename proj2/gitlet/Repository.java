@@ -116,6 +116,10 @@ public class Repository {
     @SuppressWarnings("unchecked")
     public void addCommand(File name) {
 
+        if(!name.exists()) {
+            System.out.println("File does not exist.");
+            return;
+        }
         // the cur file
         byte[] contents = Utils.readContents(name);
         String hashCode = Utils.sha1(contents); // sha1 contents
@@ -158,9 +162,9 @@ public class Repository {
                     }
                     // save
                     Utils.writeObject(STAGING_AREA, oldStagingInfo);
-                    // do not stage it to be added,
-                    return;
                 }
+                // do not stage it to be added,
+                return;
             }
         }
 
@@ -231,7 +235,7 @@ public class Repository {
         // .git/index   .git/rm_index
         if(STAGING_AREA.length() == 0 && REMOVE_INDEX.length() == 0) {
             // if staging area is empty
-            System.out.println("Everything up-to-date!");
+            System.out.println("No changes added to the commit.");
             System.exit(0);
         }
 
@@ -298,7 +302,10 @@ public class Repository {
         boolean tracked = false;
         boolean added = false;
         // check it if add --> in the staging area
-        HashMap<String,String> indexContent = Utils.readObject(STAGING_AREA,HashMap.class);
+        HashMap<String,String> indexContent = new HashMap<>();
+        if(STAGING_AREA.length() != 0) {
+            indexContent = Utils.readObject(STAGING_AREA, HashMap.class);
+        }
         if(indexContent.containsKey(name.getPath())) {
             // Unstage the file if it is currently staged for addition
             indexContent.remove(name.getPath());
