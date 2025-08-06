@@ -153,16 +153,12 @@ public class Repository {
         if(curCommitContent.containsKey(fileRelativePaths)) {
             String hashValue = curCommitContent.get(fileRelativePaths);
             if(hashCode.equals(hashValue)) {
-                if (!oldStagingInfo.isEmpty()) {
-                    // remove it from the staging area if it is already there
-                    oldStagingInfo.remove(fileRelativePaths);
-                    if (!rmHashset.isEmpty()) {
-                        rmHashset.remove(fileRelativePaths);
-                        Utils.writeObject(REMOVE_INDEX,rmHashset);
-                    }
-                    // save
-                    Utils.writeObject(STAGING_AREA, oldStagingInfo);
-                }
+                // remove it from the staging area if it is already there
+                oldStagingInfo.remove(fileRelativePaths);
+                rmHashset.remove(fileRelativePaths);
+                // save
+                Utils.writeObject(REMOVE_INDEX,rmHashset);
+                Utils.writeObject(STAGING_AREA, oldStagingInfo);
                 // do not stage it to be added,
                 return;
             }
@@ -656,7 +652,7 @@ public class Repository {
         // get the cur Commit
         String curCommitHashcode =readContentsAsString(curHeadPath);
         File curCommitFile = getHashFile(OBJECTS,curCommitHashcode);
-        Commit curCommit = readObject(curCommitFile,Commit.class);
+        Commit curCommit = Utils.readObject(curCommitFile,Commit.class);
         HashMap<String,String> curCommitTrackedF = curCommit.getFilesCommitBlob();
 
         // get the checkout branch Commit
@@ -665,7 +661,7 @@ public class Repository {
         File checkoutCommitFile = getHashFile(OBJECTS,checkoutCommitHashcode);
         // Commit --> branch needs to create one?
         // no need --> the new branch inherent the old commit
-        Commit checkoutCommit =  readObject(checkoutCommitFile, Commit.class);
+        Commit checkoutCommit =  Utils.readObject(checkoutCommitFile, Commit.class);
         HashMap<String,String> checkoutHashmap = checkoutCommit.getFilesCommitBlob();
 
         // get CWD files
@@ -772,7 +768,6 @@ public class Repository {
              }
          }
          checkout(branch);
-
     }
 
     /**
