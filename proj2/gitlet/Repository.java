@@ -154,15 +154,25 @@ public class Repository {
                     oldStagingInfo.remove(fileRelativePaths);
                     if (!rmHashset.isEmpty()) {
                         rmHashset.remove(fileRelativePaths);
+                        Utils.writeObject(REMOVE_INDEX,rmHashset);
                     }
                     // save
                     Utils.writeObject(STAGING_AREA, oldStagingInfo);
-                    Utils.writeObject(REMOVE_INDEX,rmHashset);
                     // do not stage it to be added,
                     return;
                 }
             }
         }
+
+        // The file will no longer be staged for removal ,
+        // if it was at the time of the command.
+        if (!rmHashset.isEmpty()) {
+            // remove() already check if path exist
+            rmHashset.remove(fileRelativePaths);
+            Utils.writeObject(REMOVE_INDEX,rmHashset);
+            return;
+        }
+
         // .git/objects/xx
         File hashFileDir = join(OBJECTS,hashDirName);
         if (!hashFileDir.exists()) {
@@ -193,13 +203,8 @@ public class Repository {
         // don't serialize
         Utils.writeObject(STAGING_AREA, oldStagingInfo); // overwrites
 
-        // The file will no longer be staged for removal ,
-        // if it was at the time of the command.
-        if (!rmHashset.isEmpty()) {
-            // remove() already check if path exist
-            rmHashset.remove(fileRelativePaths);
-        }
-        Utils.writeObject(REMOVE_INDEX,rmHashset);
+
+
     }
 
     @SuppressWarnings("unchecked")
@@ -235,7 +240,9 @@ public class Repository {
 
         // add
         HashMap<String,String> newStagingInfo = new HashMap<>();
-        newStagingInfo = Utils.readObject(STAGING_AREA,HashMap.class);
+        if(STAGING_AREA.length() != 0) {
+            newStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
+        }
         for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
             // go through the STAGING AREA and overwrite
             String filePath = entry.getKey();
@@ -245,7 +252,9 @@ public class Repository {
 
         // remove
         HashSet<String> newRemoveInfo = new HashSet<>();
+        if(REMOVE_INDEX.length() != 0) {
         newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
+        }
         for(String pathName:newRemoveInfo) {
             inherentHashMap.remove(pathName);
         }

@@ -93,7 +93,8 @@ private String parent;
   	|		|	|---3c
   	|
   	|
-  	|---index(暂存区) --> (path:hashcode) --> write/readObject(xxx,Hashmap.class) (add)
+  	|---index(暂存区) --> (文件路径:文件内容哈希值) i.e (wug.txt:...) sha1(contents) 
+  	|				 --> write/readObject(xxx,Hashmap.class) (add)
   	|	  
   	|
   	|---rm_index(暂存区) --> (path) --> (xxx,HashSet.class) (rm)
@@ -117,10 +118,14 @@ private String parent;
 
 #### function
 
-* ~~~
+* ~~~markdown
   ⭐：因为代码运行在CWD下，文件一般以相对路径的形式出现，i.e: wug.txt, files/wug.txt
   此时，f.getPath() 获得的也是相对路径，i.e: wug.txt, files/wug.txt
   因此，对于需要与存储的相对路径比较的文件名称，不用join(CWD,filename)
+  
+  
+  --- : 解释
+  --> : 下一步
   ~~~
 
 * 
@@ -156,10 +161,12 @@ private String parent;
   byte[] contents = readContents(name);
   String hashcode = Utils.sha1(contents);
   String path = name.getPath(); 
+  // 获得头指针的Commit -- curCommit
   
   // logic pic
   
-      read from STAGING_AREA or REMOVE_INDEX
+      read from STAGING_AREA(.gitlet/index)
+  --- 如果已经暂存的文件再次暂存，则会用新内容覆盖暂存区中的先前条目
   --> 
   ~~~
 
