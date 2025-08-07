@@ -118,18 +118,25 @@ private String parent;
 
 #### function
 
-* ~~~markdown
-  ⭐：因为代码运行在CWD下，文件一般以相对路径的形式出现，i.e: wug.txt, files/wug.txt
+* 
+  
+  ~~~markdown
+  # 路径问题
+  因为代码运行在CWD下，文件一般以相对路径的形式出现，i.e: wug.txt, files/wug.txt
   此时，f.getPath() 获得的也是相对路径，i.e: wug.txt, files/wug.txt
   因此，对于需要与存储的相对路径比较的文件名称，不用join(CWD,filename)
   
+  # git reset 与 git checkout之间的区别
+· 处理完成后，HEAD指针指向不同。
   
+  # 逻辑图注释
   --- : 解释
   --> : 下一步
+  
   ~~~
-
-* 
-
+  
+  ![1754536724990](C:\Users\HUAWEI\AppData\Roaming\Typora\typora-user-images\1754536724990.png)
+  
 * init()
 
   ~~~java

@@ -1,7 +1,5 @@
 package gitlet;
 
-import afu.org.checkerframework.checker.oigj.qual.O;
-
 import static gitlet.Utils.*;
 
 // any imports you need here
@@ -12,7 +10,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
+ *  It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
  *  @author wzx
@@ -82,7 +80,7 @@ public class Repository {
 
         File headFile = join(Heads,"master");
         // .git/HEAD
-        // TODO: relativaly Path ?
+        // relativaly Path
         writeContents(HEAD,headFile.getPath()); // "yeah,the HEAD pointer --->" ref: refs/heads/master
 
 
@@ -634,7 +632,6 @@ public class Repository {
             return;
         }
 
-
         // .gitlet/HEAD  --> check if it is
         String headPositionStr = readContentsAsString(HEAD);
         // .gitlet/heads/master
@@ -657,8 +654,7 @@ public class Repository {
         Commit checkoutCommit =  Utils.readObject(checkoutCommitFile, Commit.class);
         HashMap<String,String> checkoutHashmap = checkoutCommit.getFilesCommitBlob();
 
-        // get CWD files
-
+        // core function
         curAndGivenDiff(curCommitTrackedF,checkoutHashmap);
 
         // clear the staging area
@@ -723,7 +719,7 @@ public class Repository {
         HashMap<String,String> curCommitBlob = curCommit.getFilesCommitBlob();
         HashMap<String,String> givenCommitBlob = givenCommit.getFilesCommitBlob();
 
-        //
+        // core function
         curAndGivenDiff(curCommitBlob,givenCommitBlob);
 
         // update × --> wrong here! you can't change the history
@@ -955,6 +951,7 @@ public class Repository {
     // Merge commits differ from other commits: they record as parents
     // both the head of the current branch (called the first parent) and
     // the head of the branch given on the command line to be merged in.
+    @SuppressWarnings("unchecked")
     public void mergeCommit(String msg,Commit curCommit,String curBranch,String curHashcode,String givenHashcode) {
 
         Commit newCommit = new Commit();
