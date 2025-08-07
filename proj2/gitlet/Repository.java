@@ -1,5 +1,7 @@
 package gitlet;
 
+import afu.org.checkerframework.checker.oigj.qual.O;
+
 import static gitlet.Utils.*;
 
 // any imports you need here
@@ -143,9 +145,7 @@ public class Repository {
         }
 
         // Get the cur commit
-        String headHashcode = getHeadHashCode();
-        File headFile = getHashFile(OBJECTS,headHashcode);
-        Commit curCommit = Utils.readObject(headFile,Commit.class);
+        Commit curCommit = getCurCommit();
         HashMap<String,String> curCommitContent = curCommit.getFilesCommitBlob();
 
         // If the current working version of the file is
@@ -279,12 +279,12 @@ public class Repository {
         }
 
         //.git/index  --> clear
-        HashMap<String,String> emptyHashmap = new HashMap<>();
-        writeObject(STAGING_AREA,emptyHashmap);
+//        HashMap<String,String> emptyHashmap = new HashMap<>();
+//        writeObject(STAGING_AREA,emptyHashmap);
+        clearStagingArea();
 
         //.git/rm_index --> clear
-        HashSet<String> emptyHashset = new HashSet<>();
-        writeObject(REMOVE_INDEX,emptyHashset);
+        clearRmStagingArea();
 
         //.git/refs/heads/master  --> change HEAD
         File headFile = join(Heads,"master");
@@ -312,9 +312,8 @@ public class Repository {
 
         // check it if tracked
         // read from HEAD
-        String headHashCode = getHeadHashCode();
-        File headCommitFile = getHashFile(OBJECTS,headHashCode);
-        Commit headCommit = Utils.readObject(headCommitFile, Commit.class);
+        Commit headCommit = getCurCommit();
+
         if(headCommit.getFilesCommitBlob().containsKey(name.getPath())) {
             tracked = true;
         }
@@ -455,9 +454,7 @@ public class Repository {
         String str5 = "=== Untracked Files ===";
 
         // head Commit
-        String headHashcode = getHeadHashCode();
-        File headFile = getHashFile(OBJECTS,headHashcode);
-        Commit headCommit = readObject(headFile,Commit.class);
+        Commit headCommit = getCurCommit();
         HashMap<String,String> commitHashmap = headCommit.getFilesCommitBlob();
 
 
@@ -594,9 +591,7 @@ public class Repository {
 
     public void checkout(File fName) {
         // get the head commit
-        String headHashCode= getHeadHashCode();
-        File headFile = getHashFile(OBJECTS,headHashCode);
-        Commit headCommit = readObject(headFile,Commit.class);
+        Commit headCommit = getCurCommit();
         checkoutHelper(headCommit,fName);
     }
 
@@ -650,9 +645,7 @@ public class Repository {
         }
 
         // get the cur Commit
-        String curCommitHashcode =readContentsAsString(curHeadPath);
-        File curCommitFile = getHashFile(OBJECTS,curCommitHashcode);
-        Commit curCommit = Utils.readObject(curCommitFile,Commit.class);
+        Commit curCommit = getCurCommit();
         HashMap<String,String> curCommitTrackedF = curCommit.getFilesCommitBlob();
 
         // get the checkout branch Commit
@@ -665,53 +658,12 @@ public class Repository {
         HashMap<String,String> checkoutHashmap = checkoutCommit.getFilesCommitBlob();
 
         // get CWD files
-        List<String> fileList = plainFilenamesIn(CWD);
 
-        if (fileList != null) {
-            // 1、check if a working file is untracked in the current branch
-            // 2、and would be overwritten by the checkout
-            for(String filename:fileList) {
-//                File f = new File(filename);
-                File f = join(CWD,filename);
-                if(!curCommitTrackedF.containsKey(f.getPath())) {
-                    if(checkoutHashmap.containsKey(f.getPath())) {
-                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                        return;
-                    }
-                }
-            }
-
-            // delete the CWD files that checkoutBranch doesn't have
-            // 1、Any files that are tracked in the current branch
-            // 2、but are not present in the checked-out branch are deleted.
-            for (String filename : fileList) {
-//                File f = new File(filename);
-                File f = join(CWD,filename);
-                if(!checkoutHashmap.containsKey(f.getPath())
-                && curCommitTrackedF.containsKey(f.getPath())) {
-                    // delete from the CWD
-                    f.delete();
-                }
-            }
-
-            // overwrite or create a new file
-            for(String checkoutHashKey:checkoutHashmap.keySet()) {
-                String blobHash = checkoutHashmap.get(checkoutHashKey);
-                File blobFile =getHashFile(OBJECTS,blobHash);
-                byte[] blobContent = readContents(blobFile);
-
-                // overwrite or create a new file
-                File cwdBlobFile = new File(checkoutHashKey);
-                writeContents(cwdBlobFile,blobContent);
-//                writeObject(cwdBlobFile,blobContent);
-            }
-
-        }
+        curAndGivenDiff(curCommitTrackedF,checkoutHashmap);
 
         // clear the staging area
         //.git/index  --> clear
-        HashMap<String,String> emptyHashmap = new HashMap<>();
-        writeObject(STAGING_AREA,emptyHashmap);
+        clearStagingArea();
 
         // given branch will now be considered the current branch (HEAD)
         // refresh the HEAD file with new branch path
@@ -756,18 +708,34 @@ public class Repository {
 
     public void reset(String commitId) {
 
-        // get the commitId branch name
-         List<String> branchList = plainFilenamesIn(Heads);
-         String branch = new String();
-         for(String branchName:branchList) {
-             File branchPath = join(Heads,branchName);
-             String branchHashcode = readContentsAsString(branchPath);
-             if(commitId.equals(branchHashcode)) {
-                 branch = branchName;
-                 break;
-             }
-         }
-         checkout(branch);
+        // get Commit
+        Commit curCommit = getCurCommit();
+
+        // get given Commit
+        File givenHashFile = getHashFile(OBJECTS,commitId);
+        if(!givenHashFile.exists()) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+        Commit givenCommit = readObject(givenHashFile, Commit.class);
+
+        // get Blob hashmap
+        HashMap<String,String> curCommitBlob = curCommit.getFilesCommitBlob();
+        HashMap<String,String> givenCommitBlob = givenCommit.getFilesCommitBlob();
+
+        //
+        curAndGivenDiff(curCommitBlob,givenCommitBlob);
+
+        // update × --> wrong here! you can't change the history
+//        writeObject(curCommitFile,curCommit);
+
+        // Also moves the current branch’s head to that commit node
+        String headPositionStr = readContentsAsString(HEAD);
+        File headPosition = new File(headPositionStr);
+        writeContents(headPosition,commitId);
+
+        // The staging area is cleared.
+        clearStagingArea();
     }
 
     /**
@@ -847,7 +815,8 @@ public class Repository {
         List<String> fileList = plainFilenamesIn(CWD);
         if(fileList != null) {
             for(String filename:fileList) {
-                File f = join(CWD,filename);
+//                File f = join(CWD,filename);
+                File f = new File(filename);
                 String untrackedPath = f.getPath();
                 if(!curHashmap.containsKey(untrackedPath)) {
                     boolean wouldBeOverwritten = givenHashmap.containsKey(untrackedPath);
@@ -1127,11 +1096,74 @@ public class Repository {
         return join(path,headHashDirName,headHashFileName);
     }
 
+    public Commit getCurCommit() {
+        String headHashcode = getHeadHashCode();
+        File headFile = getHashFile(OBJECTS,headHashcode);
+        return Utils.readObject(headFile, Commit.class);
+    }
+
+
+    public void clearStagingArea() {
+        //.git/index  --> clear
+        HashMap<String,String> emptyHashmap = new HashMap<>();
+        writeObject(STAGING_AREA,emptyHashmap);
+    }
+
+    public void clearRmStagingArea() {
+        HashSet<String> emptyHashset = new HashSet<>();
+        writeObject(REMOVE_INDEX,emptyHashset);
+    }
+
     public byte[] getBlobContent(String hashcode) {
         String headHashDirName = hashcode.substring(0,2);
         String headHashFileName = hashcode.substring(2);
         File blobFile = join(OBJECTS,headHashDirName,headHashFileName);
         return readContents(blobFile);
+    }
+
+    public void curAndGivenDiff(HashMap<String,String> curH,HashMap<String,String> givenH) {
+
+        // reuse in reset and checkout
+        List<String> fileList = plainFilenamesIn(CWD);
+        if (fileList != null) {
+            // 1、check if a working file is untracked in the current branch
+            // 2、and would be overwritten by the checkout
+            for(String filename:fileList) {
+                File f = new File(filename);
+//                File f = join(CWD,filename);
+                if(!curH.containsKey(f.getPath())) {
+                    if(givenH.containsKey(f.getPath())) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        return;
+                    }
+                }
+            }
+
+            // delete the CWD files that checkoutBranch doesn't have
+            // 1、Any files that are tracked in the current branch
+            // 2、but are not present in the checked-out branch are deleted.
+            for (String filename : fileList) {
+                File f = new File(filename);
+//                File f = join(CWD,filename);
+                if(!givenH.containsKey(f.getPath())
+                        && curH.containsKey(f.getPath())) {
+                    // delete from the CWD
+                    f.delete();
+                }
+            }
+
+            // overwrite or create a new file
+            for(String checkoutHashKey:givenH.keySet()) {
+                String blobHash = givenH.get(checkoutHashKey);
+                File blobFile =getHashFile(OBJECTS,blobHash);
+                byte[] blobContent = readContents(blobFile);
+
+                // overwrite or create a new file
+                File cwdBlobFile = new File(checkoutHashKey);
+                writeContents(cwdBlobFile,blobContent);
+            }
+
+        }
     }
 
 
