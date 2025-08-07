@@ -94,7 +94,7 @@ public class Main {
                     repo.checkout(commitId,file);
                 }
                 else {
-                    System.out.println("Please entry [file name]/[commit id] -- [file name]/[branch name]");
+                    System.out.println("Incorrect operands.");
                     System.exit(0);
                 }
                 break;
