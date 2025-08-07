@@ -131,16 +131,16 @@ public class Repository {
 
         // .git/index
         // persistence --> read from file
-        HashMap<String, String> oldStagingInfo = new HashMap<>();
-        if (STAGING_AREA.length() != 0) {
-            oldStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
-        }
+        HashMap<String, String> oldStagingInfo = getStagingArea();
+//        if (STAGING_AREA.length() != 0) {
+//            oldStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
+//        }
 
         // .git/rm_index which store the file path
-        HashSet<String> rmHashset = new HashSet<>();
-        if(REMOVE_INDEX.length() != 0) {
-            rmHashset = Utils.readObject(REMOVE_INDEX,HashSet.class);
-        }
+        HashSet<String> rmHashset = getRmStagingArea();
+//        if(REMOVE_INDEX.length() != 0) {
+//            rmHashset = Utils.readObject(REMOVE_INDEX,HashSet.class);
+//        }
 
         // Get the cur commit
         Commit curCommit = getCurCommit();
@@ -205,7 +205,6 @@ public class Repository {
 
     }
 
-    @SuppressWarnings("unchecked")
     public void commitCommand(String msg) {
         Commit newCommit = new Commit();
 
@@ -237,10 +236,10 @@ public class Repository {
         HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
 
         // add
-        HashMap<String,String> newStagingInfo = new HashMap<>();
-        if(STAGING_AREA.length() != 0) {
-            newStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
-        }
+        HashMap<String,String> newStagingInfo = getStagingArea();
+//        if(STAGING_AREA.length() != 0) {
+//            newStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
+//        }
         for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
             // go through the STAGING AREA and overwrite
             String filePath = entry.getKey();
@@ -249,10 +248,10 @@ public class Repository {
         }
 
         // remove
-        HashSet<String> newRemoveInfo = new HashSet<>();
-        if(REMOVE_INDEX.length() != 0) {
-        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
-        }
+        HashSet<String> newRemoveInfo = getRmStagingArea();
+//        if(REMOVE_INDEX.length() != 0) {
+//        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
+//        }
         for(String pathName:newRemoveInfo) {
             inherentHashMap.remove(pathName);
         }
@@ -284,22 +283,24 @@ public class Repository {
         //.git/rm_index --> clear
         clearRmStagingArea();
 
-        //.git/refs/heads/master  --> change HEAD
-        File headFile = join(Heads,"master");
+        //.git/refs/heads/..  --> change HEAD
+        String headPath = readContentsAsString(HEAD);
+        File headFile = new File(headPath);
         writeContents(headFile,newCommitHashcode);
+
 
     }
 
-    @SuppressWarnings("unchecked")
+
     public void rmCommand(File name) {
 
         boolean tracked = false;
         boolean added = false;
         // check it if add --> in the staging area
-        HashMap<String,String> indexContent = new HashMap<>();
-        if(STAGING_AREA.length() != 0) {
-            indexContent = Utils.readObject(STAGING_AREA, HashMap.class);
-        }
+        HashMap<String,String> indexContent = getStagingArea();
+//        if(STAGING_AREA.length() != 0) {
+//            indexContent = Utils.readObject(STAGING_AREA, HashMap.class);
+//        }
         if(indexContent.containsKey(name.getPath())) {
             // Unstage the file if it is currently staged for addition
             indexContent.remove(name.getPath());
@@ -320,10 +321,10 @@ public class Repository {
             // do not remove it unless it is tracked in the current commit
             // so it is tracked here --> remove it from CWD
             // stage it for removal --> Hashset
-            HashSet<String> removalHashSet = new HashSet<>();
-            if(REMOVE_INDEX.length() != 0) {
-                removalHashSet = Utils.readObject(REMOVE_INDEX, HashSet.class);
-            }
+            HashSet<String> removalHashSet = getRmStagingArea();
+//            if(REMOVE_INDEX.length() != 0) {
+//                removalHashSet = Utils.readObject(REMOVE_INDEX, HashSet.class);
+//            }
             removalHashSet.add(name.getPath());
             // don't serialize
             writeObject(REMOVE_INDEX,removalHashSet);
@@ -442,7 +443,7 @@ public class Repository {
             System.out.println("Found no commit with that message.");
         }
     }
-    @SuppressWarnings("unchecked")
+
     public void status() {
 
         String str1 = "=== Branches ===";
@@ -473,29 +474,30 @@ public class Repository {
 
         /** Staged Files */
         System.out.println(str2);
-        HashMap<String, String> stageFile = new HashMap<>();
-        if(STAGING_AREA.length() != 0) {
-            stageFile = readObject(STAGING_AREA, HashMap.class);
-            for (Map.Entry<String, String> entry : stageFile.entrySet()) {
-                String stagePath = entry.getKey(); // absolute path
-                File stagefile = new File(stagePath);
-                System.out.println(stagefile.getName());
-            }
+        HashMap<String, String> stageFile = getStagingArea();
+//        if(STAGING_AREA.length() != 0) {
+//            stageFile = readObject(STAGING_AREA, HashMap.class);
+        for (Map.Entry<String, String> entry : stageFile.entrySet()) {
+            String stagePath = entry.getKey(); // absolute path
+            File stagefile = new File(stagePath);
+            System.out.println(stagefile.getName());
         }
+//        }
+
 
         System.out.print("\n");
 
         /** Removed Files*/
         System.out.println(str3);
-        HashSet<String> removeFile = new HashSet<>();
-        if(REMOVE_INDEX.length()!=0) {
-            removeFile = readObject(REMOVE_INDEX,HashSet.class);
-            for(String path:removeFile) {
-                // it has been removed
-                Path p = Paths.get(path);
-                System.out.println(p.getFileName());
+        HashSet<String> removeFile = getRmStagingArea();
+//        if(REMOVE_INDEX.length()!=0) {
+//            removeFile = readObject(REMOVE_INDEX,HashSet.class);
+        for(String path:removeFile) {
+            // it has been removed
+            Path p = Paths.get(path);
+            System.out.println(p.getFileName());
             }
-        }
+//        }
 
         System.out.print("\n");
 
@@ -633,10 +635,9 @@ public class Repository {
         }
 
         // .gitlet/HEAD  --> check if it is
-        String headPositionStr = readContentsAsString(HEAD);
         // .gitlet/heads/master
-        File curHeadPath = new File(headPositionStr);
-        if(branchName.equals(curHeadPath.getName())) {
+        String curHeadName = getHeadName();
+        if(branchName.equals(curHeadName)) {
             System.out.println("No need to checkout the current branch.");
             return;
         }
@@ -654,9 +655,15 @@ public class Repository {
         Commit checkoutCommit =  Utils.readObject(checkoutCommitFile, Commit.class);
         HashMap<String,String> checkoutHashmap = checkoutCommit.getFilesCommitBlob();
 
-        // core function
-        curAndGivenDiff(curCommitTrackedF,checkoutHashmap);
+        HashMap<String,String> stageFile = getStagingArea();
 
+
+        boolean success = false;
+        // core function
+        success = curAndGivenDiff(curCommitTrackedF,checkoutHashmap,stageFile);
+        if(!success) {
+            return;
+        }
         // clear the staging area
         //.git/index  --> clear
         clearStagingArea();
@@ -702,6 +709,7 @@ public class Repository {
         rmBranchFile.delete();
     }
 
+    @SuppressWarnings("unchecked")
     public void reset(String commitId) {
 
         // get Commit
@@ -719,9 +727,15 @@ public class Repository {
         HashMap<String,String> curCommitBlob = curCommit.getFilesCommitBlob();
         HashMap<String,String> givenCommitBlob = givenCommit.getFilesCommitBlob();
 
-        // core function
-        curAndGivenDiff(curCommitBlob,givenCommitBlob);
+        // StageFile
+        HashMap<String,String> stageFile = getStagingArea();
 
+        boolean success = false;
+        // core function
+        success = curAndGivenDiff(curCommitBlob,givenCommitBlob,stageFile);
+        if(!success) {
+            return;
+        }
         // update × --> wrong here! you can't change the history
 //        writeObject(curCommitFile,curCommit);
 
@@ -808,6 +822,7 @@ public class Repository {
         HashMap<String,String> splitHashmap = splitPoint.getFilesCommitBlob();
 
         // If an untracked file in the current commit would be overwritten or deleted by the merge
+        // untrack: not stage and not commit
         List<String> fileList = plainFilenamesIn(CWD);
         if(fileList != null) {
             for(String filename:fileList) {
@@ -951,7 +966,6 @@ public class Repository {
     // Merge commits differ from other commits: they record as parents
     // both the head of the current branch (called the first parent) and
     // the head of the branch given on the command line to be merged in.
-    @SuppressWarnings("unchecked")
     public void mergeCommit(String msg,Commit curCommit,String curBranch,String curHashcode,String givenHashcode) {
 
         Commit newCommit = new Commit();
@@ -973,8 +987,9 @@ public class Repository {
         HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
 
         // add
-        HashMap<String,String> newStagingInfo = new HashMap<>();
-        newStagingInfo = Utils.readObject(STAGING_AREA,HashMap.class);
+//        HashMap<String,String> newStagingInfo = new HashMap<>();
+//        newStagingInfo = Utils.readObject(STAGING_AREA,HashMap.class);
+        HashMap<String,String> newStagingInfo = getStagingArea();
         for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
             // go through the STAGING AREA and overwrite
             String filePath = entry.getKey();
@@ -983,8 +998,8 @@ public class Repository {
         }
 
         // remove
-        HashSet<String> newRemoveInfo = new HashSet<>();
-        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
+        HashSet<String> newRemoveInfo = getRmStagingArea();
+//        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
         for(String pathName:newRemoveInfo) {
             inherentHashMap.remove(pathName);
         }
@@ -1009,12 +1024,10 @@ public class Repository {
         }
 
         //.git/index  --> clear
-        HashMap<String,String> emptyHashmap = new HashMap<>();
-        writeObject(STAGING_AREA,emptyHashmap);
+        clearStagingArea();
 
         //.git/rm_index --> clear
-        HashSet<String> emptyHashset = new HashSet<>();
-        writeObject(REMOVE_INDEX,emptyHashset);
+        clearRmStagingArea();
 
         //.git/refs/heads/master  --> change HEAD
         File headFile = join(Heads,curBranch);
@@ -1099,6 +1112,12 @@ public class Repository {
         return Utils.readObject(headFile, Commit.class);
     }
 
+    public String getHeadName() {
+        String headRef = readContentsAsString(HEAD); // refs/heads/...
+        String curHeadBranchName = headRef.substring(headRef.lastIndexOf('/') + 1);
+        return curHeadBranchName;
+    }
+
 
     public void clearStagingArea() {
         //.git/index  --> clear
@@ -1118,20 +1137,41 @@ public class Repository {
         return readContents(blobFile);
     }
 
-    public void curAndGivenDiff(HashMap<String,String> curH,HashMap<String,String> givenH) {
+    @SuppressWarnings("unchecked")
+    public HashMap<String,String> getStagingArea() {
+        HashMap<String,String> stageFile = new HashMap<>();
+        if(STAGING_AREA.length() != 0) {
+            stageFile = readObject(STAGING_AREA,HashMap.class);
+        }
+        return stageFile;
+    }
+
+    @SuppressWarnings("unchecked")
+    public HashSet<String> getRmStagingArea() {
+        HashSet<String> RmFile = new HashSet<>();
+        if(REMOVE_INDEX.length() != 0) {
+            RmFile = readObject(REMOVE_INDEX,HashSet.class);
+        }
+        return RmFile;
+    }
+
+
+    public boolean curAndGivenDiff(HashMap<String,String> curH,HashMap<String,String> givenH,HashMap<String,String> stageFile) {
 
         // reuse in reset and checkout
         List<String> fileList = plainFilenamesIn(CWD);
         if (fileList != null) {
             // 1、check if a working file is untracked in the current branch
+            // untracked: not commit and not staged
             // 2、and would be overwritten by the checkout
             for(String filename:fileList) {
                 File f = new File(filename);
 //                File f = join(CWD,filename);
-                if(!curH.containsKey(f.getPath())) {
+                // untracked
+                if(!curH.containsKey(f.getPath()) && !stageFile.containsKey(f.getPath())) {
                     if(givenH.containsKey(f.getPath())) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                        return;
+                        return false;
                     }
                 }
             }
@@ -1141,11 +1181,13 @@ public class Repository {
             // 2、but are not present in the checked-out branch are deleted.
             for (String filename : fileList) {
                 File f = new File(filename);
-//                File f = join(CWD,filename);
-                if(!givenH.containsKey(f.getPath())
-                        && curH.containsKey(f.getPath())) {
-                    // delete from the CWD
-                    f.delete();
+                // Any files that are tracked in the current branch
+                if(curH.containsKey(f.getPath()) || stageFile.containsKey(f.getPath())) {
+                    if (!givenH.containsKey(f.getPath())) {
+                        // but are not present in the checked-out branch are deleted.
+                        // delete from the CWD
+                        f.delete();
+                    }
                 }
             }
 
@@ -1161,6 +1203,7 @@ public class Repository {
             }
 
         }
+        return true;
     }
 
 
