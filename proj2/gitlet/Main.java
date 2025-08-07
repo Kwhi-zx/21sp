@@ -136,7 +136,7 @@ public class Main {
                 break;
             }
             default: {
-                System.out.println("No such a command.");
+                System.out.println("No command with that name exists.");
                 System.exit(0);
             }
         }

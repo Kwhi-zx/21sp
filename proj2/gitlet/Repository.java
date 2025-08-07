@@ -132,15 +132,10 @@ public class Repository {
         // .git/index
         // persistence --> read from file
         HashMap<String, String> oldStagingInfo = getStagingArea();
-//        if (STAGING_AREA.length() != 0) {
-//            oldStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
-//        }
 
         // .git/rm_index which store the file path
         HashSet<String> rmHashset = getRmStagingArea();
-//        if(REMOVE_INDEX.length() != 0) {
-//            rmHashset = Utils.readObject(REMOVE_INDEX,HashSet.class);
-//        }
+
 
         // Get the cur commit
         Commit curCommit = getCurCommit();
@@ -235,11 +230,9 @@ public class Repository {
         // refresh the inherentHashMap
         HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
 
-        // add
+        // add .gitlet/index
         HashMap<String,String> newStagingInfo = getStagingArea();
-//        if(STAGING_AREA.length() != 0) {
-//            newStagingInfo = Utils.readObject(STAGING_AREA, HashMap.class);
-//        }
+
         for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
             // go through the STAGING AREA and overwrite
             String filePath = entry.getKey();
@@ -249,9 +242,7 @@ public class Repository {
 
         // remove
         HashSet<String> newRemoveInfo = getRmStagingArea();
-//        if(REMOVE_INDEX.length() != 0) {
-//        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
-//        }
+
         for(String pathName:newRemoveInfo) {
             inherentHashMap.remove(pathName);
         }
@@ -276,8 +267,6 @@ public class Repository {
         }
 
         //.git/index  --> clear
-//        HashMap<String,String> emptyHashmap = new HashMap<>();
-//        writeObject(STAGING_AREA,emptyHashmap);
         clearStagingArea();
 
         //.git/rm_index --> clear
@@ -298,9 +287,6 @@ public class Repository {
         boolean added = false;
         // check it if add --> in the staging area
         HashMap<String,String> indexContent = getStagingArea();
-//        if(STAGING_AREA.length() != 0) {
-//            indexContent = Utils.readObject(STAGING_AREA, HashMap.class);
-//        }
         if(indexContent.containsKey(name.getPath())) {
             // Unstage the file if it is currently staged for addition
             indexContent.remove(name.getPath());
@@ -322,9 +308,6 @@ public class Repository {
             // so it is tracked here --> remove it from CWD
             // stage it for removal --> Hashset
             HashSet<String> removalHashSet = getRmStagingArea();
-//            if(REMOVE_INDEX.length() != 0) {
-//                removalHashSet = Utils.readObject(REMOVE_INDEX, HashSet.class);
-//            }
             removalHashSet.add(name.getPath());
             // don't serialize
             writeObject(REMOVE_INDEX,removalHashSet);
@@ -446,6 +429,11 @@ public class Repository {
 
     public void status() {
 
+        if(!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+
         String str1 = "=== Branches ===";
         String str2 = "=== Staged Files ===";
         String str3 = "=== Removed Files ===";
@@ -460,14 +448,15 @@ public class Repository {
 
         /** Branches */
         List<String> branchesList = plainFilenamesIn(Heads); // list:[master、main、skeleton...]
-        String headRef = readContentsAsString(HEAD); // refs/heads/...
-        String curHeadBranchName = headRef.substring(headRef.lastIndexOf('/') + 1);
+        String curHeadBranchName = getHeadName();
         System.out.println(str1);
-        for(String branch:branchesList) {
-            if(branch.equals(curHeadBranchName)) {
-                System.out.println("*"+branch);
-            }else {
-                System.out.println(branch);
+        if (branchesList != null) {
+            for(String branch:branchesList) {
+                if(branch.equals(curHeadBranchName)) {
+                    System.out.println("*"+branch);
+                }else {
+                    System.out.println(branch);
+                }
             }
         }
         System.out.print("\n");
@@ -475,8 +464,6 @@ public class Repository {
         /** Staged Files */
         System.out.println(str2);
         HashMap<String, String> stageFile = getStagingArea();
-//        if(STAGING_AREA.length() != 0) {
-//            stageFile = readObject(STAGING_AREA, HashMap.class);
         for (Map.Entry<String, String> entry : stageFile.entrySet()) {
             String stagePath = entry.getKey(); // absolute path
             File stagefile = new File(stagePath);
@@ -490,8 +477,6 @@ public class Repository {
         /** Removed Files*/
         System.out.println(str3);
         HashSet<String> removeFile = getRmStagingArea();
-//        if(REMOVE_INDEX.length()!=0) {
-//            removeFile = readObject(REMOVE_INDEX,HashSet.class);
         for(String path:removeFile) {
             // it has been removed
             Path p = Paths.get(path);
@@ -597,7 +582,8 @@ public class Repository {
 
     public void checkout(String commitId,File fName) {
 
-        File specFile = getHashFile(OBJECTS,commitId);
+        // short uid version
+        File specFile = getHashFile(OBJECTS, commitId);
         if(!specFile.exists()) {
             System.out.println("No commit with that id exists.");
             return;
@@ -605,6 +591,8 @@ public class Repository {
         Commit specCommit = readObject(specFile,Commit.class);
         checkoutHelper(specCommit,fName);
     }
+
+
     public void checkoutHelper(Commit cm,File fName) {
 
         if(cm.getFilesCommitBlob().containsKey(fName.getPath())) {
@@ -709,7 +697,7 @@ public class Repository {
         rmBranchFile.delete();
     }
 
-    @SuppressWarnings("unchecked")
+
     public void reset(String commitId) {
 
         // get Commit
@@ -739,13 +727,15 @@ public class Repository {
         // update × --> wrong here! you can't change the history
 //        writeObject(curCommitFile,curCommit);
 
+        // The staging area is cleared.
+        clearStagingArea();
+
         // Also moves the current branch’s head to that commit node
+        // get refs/heads/..
         String headPositionStr = readContentsAsString(HEAD);
         File headPosition = new File(headPositionStr);
         writeContents(headPosition,commitId);
-
-        // The staging area is cleared.
-        clearStagingArea();
+        
     }
 
     /**
@@ -987,8 +977,6 @@ public class Repository {
         HashMap<String,String> inherentHashMap = newCommit.getFilesCommitBlob();
 
         // add
-//        HashMap<String,String> newStagingInfo = new HashMap<>();
-//        newStagingInfo = Utils.readObject(STAGING_AREA,HashMap.class);
         HashMap<String,String> newStagingInfo = getStagingArea();
         for(Map.Entry<String,String> entry: newStagingInfo.entrySet()) {
             // go through the STAGING AREA and overwrite
@@ -999,7 +987,7 @@ public class Repository {
 
         // remove
         HashSet<String> newRemoveInfo = getRmStagingArea();
-//        newRemoveInfo = Utils.readObject(REMOVE_INDEX,HashSet.class);
+
         for(String pathName:newRemoveInfo) {
             inherentHashMap.remove(pathName);
         }
@@ -1114,8 +1102,7 @@ public class Repository {
 
     public String getHeadName() {
         String headRef = readContentsAsString(HEAD); // refs/heads/...
-        String curHeadBranchName = headRef.substring(headRef.lastIndexOf('/') + 1);
-        return curHeadBranchName;
+        return headRef.substring(headRef.lastIndexOf('/') + 1);
     }
 
 
