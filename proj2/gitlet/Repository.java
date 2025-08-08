@@ -592,6 +592,10 @@ public class Repository {
     public void checkout(String commitId,File fName) {
 
         // short uid version
+        if(commitId.length() < 40) {
+            commitId = checkoutShortUID(commitId);
+        }
+
         File specFile = getHashFile(OBJECTS, commitId);
         if(!specFile.exists()) {
             System.out.println("No commit with that id exists.");
@@ -599,6 +603,44 @@ public class Repository {
         }
         Commit specCommit = readObject(specFile,Commit.class);
         checkoutHelper(specCommit,fName);
+    }
+
+    public String checkoutShortUID(String commitId) {
+        // in the (likely) event that no other object exists with an SHA-1 identifier that starts with the same
+        // six digits.
+        // You should arrange for the same thing to happen for commit ids that contain fewer than
+        // 40 characters.
+
+        String givenHashDirName = commitId.substring(0,2);
+        String givenHashFileName = "";
+        File givenHashDir = join(OBJECTS,givenHashDirName);
+        if(!givenHashDir.exists()) {
+            // if dir not exist
+            return "";
+        }
+
+        List<String> similarFile = plainFilenamesIn(givenHashDir);
+        List<String> matches = new ArrayList<>();
+
+        String givenFileRestDigits = commitId.substring(2);
+        if (similarFile != null) {
+            for(String fileName:similarFile) {
+                // it matches any length
+                if(fileName.startsWith(givenFileRestDigits)) {
+                    matches.add(fileName);
+                }
+            }
+        }
+        // if exist return concat name
+        // if not return empty
+        if(matches.size() == 1) {
+            return givenHashFileName + matches.get(0);
+        }else if (matches.isEmpty()) {
+            return "";
+        }else {
+            System.out.println("ambitious matches");
+            return "";
+        }
     }
 
 
@@ -769,8 +811,8 @@ public class Repository {
                 File f = new File(filename);
 //                File f = join(CWD,filename);
                 // untracked
-                // && !stageFile.containsKey(f.getPath())
-                if (!curH.containsKey(f.getPath())) {
+                //
+                if (!curH.containsKey(f.getPath()) && !stageFile.containsKey(f.getPath())) {
                     if (givenH.containsKey(f.getPath())) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         return false;
@@ -1221,55 +1263,6 @@ public class Repository {
 
 
 
-//    public boolean curAndGivenDiff(HashMap<String,String> curH,HashMap<String,String> givenH,HashMap<String,String> stageFile) {
-//
-//        // reuse in reset and checkout
-//        List<String> fileList = plainFilenamesIn(CWD);
-//        if (fileList != null) {
-//            // 1、check if a working file is untracked in the current branch (checkout)
-//            // untracked: not commit and not staged
-//            // 2、and would be overwritten by the checkout (checkout)
-//            for(String filename:fileList) {
-//                File f = new File(filename);
-////                File f = join(CWD,filename);
-//                // untracked
-//                if(!curH.containsKey(f.getPath()) && !stageFile.containsKey(f.getPath())) {
-//                    if(givenH.containsKey(f.getPath())) {
-//                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-//                        return false;
-//                    }
-//                }
-//            }
-//
-//            // delete the CWD files that checkoutBranch doesn't have (checkout)
-//            // 1、Any files that are tracked in the current branch (checkout)
-//            // 2、but are not present in the checked-out branch are deleted. (checkout)
-//            for (String filename : fileList) {
-//                File f = new File(filename);
-//                // Any files that are tracked in the current branch
-//                if(curH.containsKey(f.getPath()) || stageFile.containsKey(f.getPath())) {
-//                    if (!givenH.containsKey(f.getPath())) {
-//                        // but are not present in the checked-out branch are deleted.
-//                        // delete from the CWD
-//                        f.delete();
-//                    }
-//                }
-//            }
-//
-//            // overwrite or create a new file (checkout)
-//            for(String checkoutHashKey:givenH.keySet()) {
-//                String blobHash = givenH.get(checkoutHashKey);
-//                File blobFile =getHashFile(OBJECTS,blobHash);
-//                byte[] blobContent = readContents(blobFile);
-//
-//                // overwrite or create a new file
-//                File cwdBlobFile = new File(checkoutHashKey);
-//                writeContents(cwdBlobFile,blobContent);
-//            }
-//
-//        }
-//        return true;
-//    }
 
 
 
