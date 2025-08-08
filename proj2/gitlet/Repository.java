@@ -1066,7 +1066,7 @@ public class Repository {
             // Do not create a commit.
             return;
         }
-        String mergeMsg = "Merged %s into %s";
+        String mergeMsg = "Merged %s into %s.";
         mergeCommit(String.format(mergeMsg,branchName,headPosition.getName()),
                     curCommit,
                     headPosition.getName(),
