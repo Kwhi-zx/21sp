@@ -932,7 +932,7 @@ public class Repository {
         HashMap<String,String> splitHashmap = splitPoint.getFilesCommitBlob();
 
         // If an untracked file in the current commit would be overwritten or deleted by the merge
-        // untrack: not stage and not commit
+        // untracked: not stage and not commit
         List<String> fileList = plainFilenamesIn(CWD);
         if(fileList != null) {
             for(String filename:fileList) {
@@ -1067,7 +1067,7 @@ public class Repository {
             return;
         }
         String mergeMsg = "Merged %s into %s";
-        mergeCommit(String.format(mergeMsg,headPosition.getName(),branchName),
+        mergeCommit(String.format(mergeMsg,branchName,headPosition.getName()),
                     curCommit,
                     headPosition.getName(),
                     curCommitHashcode,
@@ -1155,6 +1155,7 @@ public class Repository {
             givenContent = getBlobContent(givenHashcode);
         }
 
+
         String curContentStr = (curContent == null) ? "" : new String(curContent);
         String givenContentStr = (givenContent == null) ? "" : new String(givenContent);
 
@@ -1165,7 +1166,7 @@ public class Repository {
         conflictBuilder.append(givenContentStr);
         conflictBuilder.append(">>>>>>>");
 
-        return Utils.serialize(conflictBuilder);
+        return Utils.serialize(conflictBuilder.toString());
     }
 
     public Commit findTheSplitPoint(Commit cur,Commit given,String curHashcode,String givenHashcode) {
