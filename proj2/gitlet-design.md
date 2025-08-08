@@ -129,6 +129,10 @@ private String parent;
   # git reset 与 git checkout之间的区别
 · 处理完成后，HEAD指针指向不同。
   
+  # git reset 与 git checkout 删除未追踪文件规则
+  ## 本人认为这两个函数的删除规则与 rm 类似
+  ## 对于没有Commit的文件，不能在本地删除，而只能删除暂存区的记录
+  
   # 逻辑图注释
   --- : 解释
   --> : 下一步

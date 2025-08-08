@@ -89,6 +89,7 @@ public class Commit implements Serializable {
             String value = entry.getValue();
             this.filesandBlob.put(key,value);
         }
+//        this.filesandBlob = new HashMap<>(hashMap); // deep copy
     }
 
 }

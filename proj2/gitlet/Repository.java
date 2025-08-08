@@ -159,7 +159,8 @@ public class Repository {
 
         // The file will no longer be staged for removal ,
         // if it was at the time of the command.
-        if (!rmHashset.isEmpty()) {
+        // !!!
+        if (rmHashset.contains(fileRelativePaths)) {
             // remove() already check if path exist
             rmHashset.remove(fileRelativePaths);
             Utils.writeObject(REMOVE_INDEX,rmHashset);
@@ -214,11 +215,16 @@ public class Repository {
         File parentContentFile = getHashFile(OBJECTS,parentCommitHash);
         Commit parentCommit = Utils.readObject(parentContentFile,Commit.class);
 
+        // deep copy
+        HashMap<String, String> newCommitFileMap = new HashMap<>(parentCommit.getFilesCommitBlob());
+        newCommit.setFilesandBlob(newCommitFileMap);
+
         List<String> parentList = new ArrayList<>();
         parentList.add(parentCommitHash);
         newCommit.setParents(parentList);
 
-        newCommit.setFilesandBlob(parentCommit.getFilesCommitBlob());
+
+
 
         // .git/index   .git/rm_index
         if(STAGING_AREA.length() == 0 && REMOVE_INDEX.length() == 0) {
@@ -272,11 +278,11 @@ public class Repository {
         //.git/rm_index --> clear
         clearRmStagingArea();
 
-        //.git/refs/heads/..  --> change HEAD
+        // get HEAD --> go to .git/refs/heads/..
         String headPath = readContentsAsString(HEAD);
         File headFile = new File(headPath);
+        // change the head hashcode
         writeContents(headFile,newCommitHashcode);
-
 
     }
 
@@ -558,6 +564,9 @@ public class Repository {
 
         /** Untracked Files */
         // untracked : not commit and not stage
+        // The final category (“Untracked Files”) is for files present in the working directory
+        // but neither staged for addition nor tracked.
+        // This includes files that have been staged for removal, but then re-created without Gitlet’s knowledge.
         System.out.println(str5);
 
         if (filesList != null) {
@@ -649,14 +658,14 @@ public class Repository {
         // get cwd
         List<String> fileList = plainFilenamesIn(CWD);
 
-        boolean success = false;
+        boolean success;
         // check if there is an untracked file
         success = checkUntrackedFile(curCommitTrackedF,checkoutHashmap,stageFile,fileList);
         if(!success) {
             return;
         }
 
-        refreshCWD(curCommitTrackedF,checkoutHashmap,stageFile,fileList);
+        refreshCWD(curCommitTrackedF,checkoutHashmap,fileList);
         // clear the staging area
         //.git/index  --> clear
         clearStagingArea();
@@ -734,7 +743,7 @@ public class Repository {
             return;
         }
 
-        refreshCWD(curCommitBlob,givenCommitBlob,stageFile,fileList);
+        refreshCWD(curCommitBlob,givenCommitBlob,fileList);
 
         // update × --> wrong here! you can't change the history
 //        writeObject(curCommitFile,curCommit);
@@ -755,13 +764,13 @@ public class Repository {
         // use in  checkout
         if (fileList != null) {
             // 1、check if a working file is untracked in the current branch (checkout)
-            // untracked: not commit and not staged
             // 2、and would be overwritten by the checkout (checkout)
             for (String filename : fileList) {
                 File f = new File(filename);
 //                File f = join(CWD,filename);
                 // untracked
-                if (!curH.containsKey(f.getPath()) && !stageFile.containsKey(f.getPath())) {
+                // && !stageFile.containsKey(f.getPath())
+                if (!curH.containsKey(f.getPath())) {
                     if (givenH.containsKey(f.getPath())) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         return false;
@@ -773,7 +782,7 @@ public class Repository {
     }
 
     public void refreshCWD(HashMap<String,String> curH,HashMap<String,String> givenH,
-                           HashMap<String,String> stageFile,List<String> fileList) {
+                           List<String> fileList) {
         if(fileList != null) {
             // delete the CWD files that checkoutBranch doesn't have (checkout)
             // 1、Any files that are tracked in the current branch (checkout)
@@ -781,8 +790,8 @@ public class Repository {
             for (String filename : fileList) {
                 File f = new File(filename);
                 // Any files that are tracked in the current branch
-                //  Files for deletion must be tracked in the CURRENT commit (curH)
-                // || stageFile.containsKey(f.getPath())
+                // Files for deletion must be tracked in the CURRENT commit (curH)
+                // || stageFile.containsKey(f.getPath()) --> no need
                 if(curH.containsKey(f.getPath())) {
                     if (!givenH.containsKey(f.getPath())) {
                         // but are not present in the checked-out branch are deleted.
@@ -796,7 +805,7 @@ public class Repository {
         // overwrite or create a new file (checkout)
         for(String checkoutHashKey:givenH.keySet()) {
             String blobHash = givenH.get(checkoutHashKey);
-            File blobFile =getHashFile(OBJECTS,blobHash);
+            File blobFile = getHashFile(OBJECTS,blobHash);
             byte[] blobContent = readContents(blobFile);
 
             // overwrite or create a new file
