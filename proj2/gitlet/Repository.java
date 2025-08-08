@@ -710,6 +710,7 @@ public class Repository {
         // clear the staging area
         //.git/index  --> clear
         clearStagingArea();
+        clearRmStagingArea(); //
 
         // given branch will now be considered the current branch (HEAD)
         // refresh the HEAD file with new branch path
@@ -791,6 +792,8 @@ public class Repository {
 
         // The staging area is cleared.
         clearStagingArea();
+        clearRmStagingArea();
+
 
         // Also moves the current branch’s head to that commit node
         // get refs/heads/..
@@ -808,9 +811,7 @@ public class Repository {
             // 2、and would be overwritten by the checkout (checkout)
             for (String filename : fileList) {
                 File f = new File(filename);
-//                File f = join(CWD,filename);
                 // untracked
-                //
                 if (!curH.containsKey(f.getPath()) && !stageFile.containsKey(f.getPath())) {
                     if (givenH.containsKey(f.getPath())) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
@@ -1183,8 +1184,16 @@ public class Repository {
             }
 
             curParentHashcode = curParent.getFirstParent();
-            curParent = getParentCommit(curParentHashcode);
+            if(curParentHashcode == null) {
+                splitPoint = curParent;
+                break;
+            }
             givenParentHashcode = givenParent.getFirstParent();
+            if(givenParentHashcode == null) {
+                splitPoint = givenParent;
+                break;
+            }
+            curParent = getParentCommit(curParentHashcode);
             givenParent = getParentCommit(givenParentHashcode);
 
         }
