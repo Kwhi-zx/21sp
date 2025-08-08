@@ -612,7 +612,6 @@ public class Repository {
         // 40 characters.
 
         String givenHashDirName = commitId.substring(0,2);
-        String givenHashFileName = "";
         File givenHashDir = join(OBJECTS,givenHashDirName);
         if(!givenHashDir.exists()) {
             // if dir not exist
@@ -634,7 +633,7 @@ public class Repository {
         // if exist return concat name
         // if not return empty
         if(matches.size() == 1) {
-            return givenHashFileName + matches.get(0);
+            return givenHashDirName + matches.get(0);
         }else if (matches.isEmpty()) {
             return "";
         }else {
