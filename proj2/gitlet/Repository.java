@@ -911,8 +911,9 @@ public class Repository {
         File curCommitFile = getHashFile(OBJECTS,curCommitHashcode);
         Commit curCommit = readObject(curCommitFile,Commit.class);
 
+
         // find the split point
-        Commit splitPoint = findTheSplitPoint(curCommit,branchCommit);
+        Commit splitPoint = findTheSplitPoint(curCommit,branchCommit,curCommitHashcode,branchHashcode);
 
         // If the split point is the same commit as the given branch, then we do nothing
         if(splitPoint.equals(branchCommit)) {
@@ -935,7 +936,6 @@ public class Repository {
         List<String> fileList = plainFilenamesIn(CWD);
         if(fileList != null) {
             for(String filename:fileList) {
-//                File f = join(CWD,filename);
                 File f = new File(filename);
                 String untrackedPath = f.getPath();
                 if(!curHashmap.containsKey(untrackedPath)) {
@@ -951,7 +951,9 @@ public class Repository {
 
 
         // If there are staged additions or removals present
-        if(STAGING_AREA.length() != 0 || REMOVE_INDEX.length() != 0) {
+        HashMap<String,String> stagingArea = getStagingArea();
+        HashSet<String> rmStagingArea = getRmStagingArea();
+        if(!stagingArea.isEmpty() || !rmStagingArea.isEmpty()) {
             System.out.println("You have uncommitted changes.");
             return;
         }
@@ -1166,38 +1168,45 @@ public class Repository {
         return Utils.serialize(conflictBuilder);
     }
 
-    public Commit findTheSplitPoint(Commit cur,Commit given) {
-
-        Commit splitPoint = new Commit();
-        // find the cur parent
+    public Commit findTheSplitPoint(Commit cur,Commit given,String curHashcode,String givenHashcode) {
+        // use this set to record the parents' hashcode
+        HashSet<String> curAncestors = new HashSet<>();
+        curAncestors.add(curHashcode);
+        // go through the cur branch
         String curParentHashcode = cur.getFirstParent();
+        if(curParentHashcode == null) {
+            return cur;
+        }
         Commit curParent = getParentCommit(curParentHashcode);
-        // find the given parent
-        String givenParentHashcode = given.getFirstParent();
-        Commit givenParent = getParentCommit(givenParentHashcode);
-
-        while(curParent != null && givenParent != null) {
-
-            if(curParent.equals(givenParent)) {
-                splitPoint = curParent;
-                break;
-            }
-
+        curAncestors.add(curParentHashcode);
+        // find all the ancestors of the cur branch
+        while (curParent != null) {
             curParentHashcode = curParent.getFirstParent();
             if(curParentHashcode == null) {
-                splitPoint = curParent;
-                break;
-            }
-            givenParentHashcode = givenParent.getFirstParent();
-            if(givenParentHashcode == null) {
-                splitPoint = givenParent;
+                // the initial Commit
                 break;
             }
             curParent = getParentCommit(curParentHashcode);
-            givenParent = getParentCommit(givenParentHashcode);
-
+            curAncestors.add(curParentHashcode);
         }
-        return splitPoint;
+
+        // if the given Commit it is
+        if(curAncestors.contains(givenHashcode)) {
+            return given;
+        }
+
+        // find the given parent
+        String givenParentHashcode = given.getFirstParent();
+        Commit givenParent = getParentCommit(givenParentHashcode);
+        while (givenParent != null) {
+            if(curAncestors.contains(givenParentHashcode)) {
+                return givenParent;
+            }
+            givenParentHashcode = givenParent.getFirstParent();
+            givenParent = getParentCommit(givenParentHashcode);
+        }
+
+        return null;
     }
 
     public Commit getParentCommit(String parentHashcode) {
@@ -1254,6 +1263,8 @@ public class Repository {
     @SuppressWarnings("unchecked")
     public HashMap<String,String> getStagingArea() {
         HashMap<String,String> stageFile = new HashMap<>();
+        // it actually always not 0
+        // it always has hashmap's metadata
         if(STAGING_AREA.length() != 0) {
             stageFile = readObject(STAGING_AREA,HashMap.class);
         }

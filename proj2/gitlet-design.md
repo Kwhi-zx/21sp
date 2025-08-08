@@ -283,6 +283,10 @@ readObject(file,Commit.class/Hashmap.class)
 
 ## Algorithms
 
+### findSplitPoint
+
+
+
 ## Persistence
 
 
