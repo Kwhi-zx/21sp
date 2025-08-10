@@ -937,20 +937,6 @@ public class Repository {
         HashMap<String,String> splitHashmap = splitPoint.getFilesCommitBlob();
         List<String> fileList = plainFilenamesIn(CWD);
 
-        // If the split point is the current branch, then the effect is to check out the given branch
-        if(splitPoint.equals(curCommit)) {
-            // overwrite .gitlet/heads/master --> branchHashcode
-            // update the Commit position
-            writeContents(headPosition,branchHashcode);
-            // CWD files update
-            refreshCWD(curHashmap,givenHashmap,fileList);
-            System.out.println("Current branch fast-forwarded.");
-            return;
-        }
-
-
-
-
         // If an untracked file in the current commit would be overwritten or deleted by the merge
         // untracked: not stage and not commit
 
@@ -968,6 +954,18 @@ public class Repository {
                     }
                 }
             }
+        }
+
+        // If the split point is the current branch, then the effect is to check out the given branch
+        if(splitPoint.equals(curCommit)) {
+            // overwrite .gitlet/heads/master --> branchHashcode
+            // update the Commit position
+            System.out.println("Current branch fast-forwarded.");
+            writeContents(headPosition,branchHashcode);
+            // CWD files update
+            refreshCWD(curHashmap,givenHashmap,fileList);
+
+            return;
         }
 
 
@@ -1092,6 +1090,7 @@ public class Repository {
                     branchHashcode);
     }
 
+
     // Merge commits differ from other commits: they record as parents
     // both the head of the current branch (called the first parent) and
     // the head of the branch given on the command line to be merged in.
@@ -1204,48 +1203,61 @@ public class Repository {
         return Utils.serialize(conflictBuilder.toString());
     }
 
+
     public Commit findTheSplitPoint(Commit cur,Commit given,String curHashcode,String givenHashcode) {
-        // debug find all parents
 
-        // use this set to record the parents' hashcode
+        // get the cur Branch (BFS)
         HashSet<String> curAncestors = new HashSet<>();
-        curAncestors.add(curHashcode);
-        // go through the cur branch
-        String curParentHashcode = cur.getFirstParent();
-        if(curParentHashcode == null) {
-            return cur;
-        }
-        Commit curParent = getParentCommit(curParentHashcode);
-        curAncestors.add(curParentHashcode);
-        // find all the ancestors of the cur branch
-        while (curParent != null) {
-            curParentHashcode = curParent.getFirstParent();
-            if(curParentHashcode == null) {
-                // the initial Commit
-                break;
+        Queue<String> queue = new ArrayDeque<>(); // helper data structure
+        queue.add(curHashcode);
+
+        while(!queue.isEmpty()) {
+            // Displaying and remove the head
+            String hashcode = queue.poll();
+            // avoid dup
+            if(curAncestors.contains(hashcode)) {
+                continue;
             }
-            curParent = getParentCommit(curParentHashcode);
-            curAncestors.add(curParentHashcode);
+            curAncestors.add(hashcode);
+
+            Commit nextCommit = getParentCommit(hashcode);
+            List<String> parentsList = nextCommit.getParents();
+
+            for(String s:parentsList) {
+                queue.add(s);
+            }
+
         }
 
-        // if the given Commit it is
-        if(curAncestors.contains(givenHashcode)) {
-            return given;
-        }
+        // now the queue is empty
+        // GO through given branch (BFS)
+        queue.add(givenHashcode);
+        HashSet<String> visited = new HashSet<>();
+        visited.add(givenHashcode);
+        while(!queue.isEmpty()) {
+            String gHashcode = queue.poll();
 
-        // find the given parent
-        String givenParentHashcode = given.getFirstParent();
-        Commit givenParent = getParentCommit(givenParentHashcode);
-        while (givenParent != null) {
-            if(curAncestors.contains(givenParentHashcode)) {
-                return givenParent;
+            if(curAncestors.contains(gHashcode)) {
+                // it is the splitCommit
+                File givenCommitFile= getHashFile(OBJECTS,gHashcode);
+                return readObject(givenCommitFile, Commit.class);
             }
-            givenParentHashcode = givenParent.getFirstParent();
-            givenParent = getParentCommit(givenParentHashcode);
+
+            Commit nextGivenCommit = getParentCommit(gHashcode);
+            List<String> givenParentsList = nextGivenCommit.getParents();
+
+            for(String s: givenParentsList) {
+                if(!visited.contains(s)) {
+                    visited.add(s);
+                    queue.add(s);
+                }
+            }
+
         }
 
         return null;
     }
+
 
     public Commit getParentCommit(String parentHashcode) {
         File ParentFile = getHashFile(OBJECTS,parentHashcode);

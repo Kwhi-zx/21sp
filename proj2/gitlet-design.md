@@ -285,6 +285,14 @@ readObject(file,Commit.class/Hashmap.class)
 
 ### findSplitPoint
 
+~~~markdown
+# 搜索策略：BFS  
+## DFS NOT WORK HERE --> 使用迭代
+
+~~~
+
+
+
 
 
 ## Persistence
