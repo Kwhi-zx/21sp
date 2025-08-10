@@ -995,7 +995,8 @@ public class Repository {
                 // case 8a:
                 // the contents of both are changed and different from other
                 else if(!splitValue.equals(curValue) &&!splitValue.equals(givenValue) &&!curValue.equals(givenValue)) {
-                    byte[] conflictContent = case8action(curValue,givenValue);
+                    byte[] conflictContent = conflictAction(curValue,givenValue);
+                    stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
@@ -1029,7 +1030,8 @@ public class Repository {
                 // the contents of one are changed and the other file is deleted
                 else if(!curValue.equals(splitValue)) {
                     // Treat a deleted file in a branch as an empty file.
-                    byte[] conflictContent = case8action(curValue,"");
+                    byte[] conflictContent = conflictAction(curValue,"");
+                    stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
@@ -1042,7 +1044,8 @@ public class Repository {
                 String splitValue = splitHashmap.get(pathName);
                 if(!givenValue.equals(splitValue)) {
                     // Treat a deleted file in a branch as an empty file.
-                    byte[] conflictContent = case8action("",givenValue);
+                    byte[] conflictContent = conflictAction("",givenValue);
+                    stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
@@ -1055,7 +1058,8 @@ public class Repository {
                     // case 8c
                     // the file was absent at the split point
                     // and has different contents in the given and current branches.
-                    byte[] conflictContent = case8action(curValue,givenValue);
+                    byte[] conflictContent = conflictAction(curValue,givenValue);
+                    stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
                     System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
@@ -1077,7 +1081,8 @@ public class Repository {
     // Merge commits differ from other commits: they record as parents
     // both the head of the current branch (called the first parent) and
     // the head of the branch given on the command line to be merged in.
-    public void mergeCommit(String msg,Commit curCommit,String curBranch,String curHashcode,String givenHashcode) {
+    public void mergeCommit(String msg,Commit curCommit,String curBranch,
+                            String curHashcode,String givenHashcode) {
 
         Commit newCommit = new Commit();
         // set timeStamp and message  --> MetaData
@@ -1145,7 +1150,20 @@ public class Repository {
 
     }
 
-    public byte[] case8action(String curHashcode,String givenHashcode) {
+    public void stageConflictContent(String fPath,byte[] contents) {
+        // (replacing “contents of…” with the indicated file’s contents) and stage the result. 
+
+        // persistence
+        HashMap<String,String> olgStaging = getStagingArea();
+        String hashCode = Utils.sha1(contents);
+        olgStaging.put(fPath,hashCode);
+        // refresh
+        writeObject(STAGING_AREA,olgStaging);
+
+    }
+
+
+    public byte[] conflictAction(String curHashcode,String givenHashcode) {
         byte[] curContent = null;
         byte[] givenContent = null;
         if(!curHashcode.isEmpty()) {
@@ -1165,6 +1183,7 @@ public class Repository {
         conflictBuilder.append("=======");
         conflictBuilder.append(givenContentStr);
         conflictBuilder.append(">>>>>>>");
+
 
         return Utils.serialize(conflictBuilder.toString());
     }
