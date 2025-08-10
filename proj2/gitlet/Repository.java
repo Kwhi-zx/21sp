@@ -978,8 +978,23 @@ public class Repository {
         allFilepathset.addAll(givenHashmap.keySet());
         allFilepathset.addAll(splitHashmap.keySet());
 
-        boolean mergeConflict = false;
+        boolean mergeConflict = threeWayMerge(allFilepathset,curHashmap,givenHashmap,splitHashmap);
 
+        if(mergeConflict) {
+            // Do not create a commit.
+            System.out.println("Encountered a merge conflict.");
+            return;
+        }
+        String mergeMsg = "Merged %s into %s.";
+        mergeCommit(String.format(mergeMsg,branchName,headPosition.getName()),
+                    curCommit,
+                    headPosition.getName(),
+                    curCommitHashcode,
+                    branchHashcode);
+    }
+
+    public boolean threeWayMerge(Set<String> allFilepathset,HashMap<String,String> curHashmap,
+                              HashMap<String,String> givenHashmap,HashMap<String,String> splitHashmap) {
 
         // go through all the file path three-way have
         for(String pathName: allFilepathset) {
@@ -1011,7 +1026,8 @@ public class Repository {
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
 //                    System.out.println("Encountered a merge conflict.");
-                    mergeConflict = true;
+//                    mergeConflict = true;
+                    return true;
                 }
 
             } else if(!splitExist && !curExist && givenExist) {
@@ -1046,7 +1062,8 @@ public class Repository {
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
 //                    System.out.println("Encountered a merge conflict.");
-                    mergeConflict = true;
+//                    mergeConflict = true;
+                    return true;
                 }
 
             } else if(splitExist && !curExist && givenExist) {
@@ -1060,7 +1077,8 @@ public class Repository {
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
 //                    System.out.println("Encountered a merge conflict.");
-                    mergeConflict = true;
+//                    mergeConflict = true;
+                    return true;
                 }
 
             } else if (!splitExist && curExist && givenExist) {
@@ -1074,21 +1092,12 @@ public class Repository {
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
 //                    System.out.println("Encountered a merge conflict.");
-                    mergeConflict = true;
+//                    mergeConflict = true;
+                    return true;
                 }
             }
         }
-        if(mergeConflict) {
-            // Do not create a commit.
-            System.out.println("Encountered a merge conflict.");
-            return;
-        }
-        String mergeMsg = "Merged %s into %s.";
-        mergeCommit(String.format(mergeMsg,branchName,headPosition.getName()),
-                    curCommit,
-                    headPosition.getName(),
-                    curCommitHashcode,
-                    branchHashcode);
+        return false;
     }
 
 
@@ -1239,8 +1248,6 @@ public class Repository {
 
             if(curAncestors.contains(gHashcode)) {
                 // it is the splitCommit
-//                File givenCommitFile= getHashFile(OBJECTS,gHashcode);
-//                return readObject(givenCommitFile, Commit.class);
                 return gHashcode;
             }
 
