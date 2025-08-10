@@ -890,6 +890,15 @@ public class Repository {
      * */
     public void merge(String branchName) {
 
+        // If there are staged additions or removals present
+        HashMap<String,String> stagingArea = getStagingArea();
+        HashSet<String> rmStagingArea = getRmStagingArea();
+        if(!stagingArea.isEmpty() || !rmStagingArea.isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+
+
         // get branchName newest commit
         File branchPosition = join(Heads,branchName);
         if(!branchPosition.exists()) {
@@ -922,10 +931,13 @@ public class Repository {
         }
         // If the split point is the current branch, then the effect is to check out the given branch
         if(splitPoint.equals(curCommit)) {
-            checkout(branchName);
+            // overwrite .gitlet/heads/master --> branchHashcode
+            writeContents(headPosition,branchHashcode);
             System.out.println("Current branch fast-forwarded.");
             return;
         }
+
+
         // get Commit Hashmap
         HashMap<String,String> curHashmap = curCommit.getFilesCommitBlob();
         HashMap<String,String> givenHashmap = branchCommit.getFilesCommitBlob();
@@ -938,6 +950,7 @@ public class Repository {
             for(String filename:fileList) {
                 File f = new File(filename);
                 String untrackedPath = f.getPath();
+                // && !staging.contains --> but we have checks no files in staging
                 if(!curHashmap.containsKey(untrackedPath)) {
                     boolean wouldBeOverwritten = givenHashmap.containsKey(untrackedPath);
                     boolean wouldBeDeleted = splitHashmap.containsKey(untrackedPath) && !givenHashmap.containsKey(untrackedPath);
@@ -949,14 +962,6 @@ public class Repository {
             }
         }
 
-
-        // If there are staged additions or removals present
-        HashMap<String,String> stagingArea = getStagingArea();
-        HashSet<String> rmStagingArea = getRmStagingArea();
-        if(!stagingArea.isEmpty() || !rmStagingArea.isEmpty()) {
-            System.out.println("You have uncommitted changes.");
-            return;
-        }
 
         /** three-way merge */
 
@@ -1151,7 +1156,7 @@ public class Repository {
     }
 
     public void stageConflictContent(String fPath,byte[] contents) {
-        // (replacing “contents of…” with the indicated file’s contents) and stage the result. 
+        // (replacing “contents of…” with the indicated file’s contents) and stage the result.
 
         // persistence
         HashMap<String,String> olgStaging = getStagingArea();
