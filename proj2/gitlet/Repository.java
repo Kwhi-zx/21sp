@@ -929,23 +929,31 @@ public class Repository {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
         }
-        // If the split point is the current branch, then the effect is to check out the given branch
-        if(splitPoint.equals(curCommit)) {
-            // overwrite .gitlet/heads/master --> branchHashcode
-            writeContents(headPosition,branchHashcode);
-            System.out.println("Current branch fast-forwarded.");
-            return;
-        }
 
 
         // get Commit Hashmap
         HashMap<String,String> curHashmap = curCommit.getFilesCommitBlob();
         HashMap<String,String> givenHashmap = branchCommit.getFilesCommitBlob();
         HashMap<String,String> splitHashmap = splitPoint.getFilesCommitBlob();
+        List<String> fileList = plainFilenamesIn(CWD);
+
+        // If the split point is the current branch, then the effect is to check out the given branch
+        if(splitPoint.equals(curCommit)) {
+            // overwrite .gitlet/heads/master --> branchHashcode
+            // update the Commit position
+            writeContents(headPosition,branchHashcode);
+            // CWD files update
+            refreshCWD(curHashmap,givenHashmap,fileList);
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+
+
+
 
         // If an untracked file in the current commit would be overwritten or deleted by the merge
         // untracked: not stage and not commit
-        List<String> fileList = plainFilenamesIn(CWD);
+
         if(fileList != null) {
             for(String filename:fileList) {
                 File f = new File(filename);
@@ -1003,7 +1011,7 @@ public class Repository {
                     byte[] conflictContent = conflictAction(curValue,givenValue);
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-                    System.out.println("Encountered a merge conflict.");
+//                    System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
                 }
 
@@ -1038,7 +1046,7 @@ public class Repository {
                     byte[] conflictContent = conflictAction(curValue,"");
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-                    System.out.println("Encountered a merge conflict.");
+//                    System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
                 }
 
@@ -1052,7 +1060,7 @@ public class Repository {
                     byte[] conflictContent = conflictAction("",givenValue);
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-                    System.out.println("Encountered a merge conflict.");
+//                    System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
                 }
 
@@ -1066,13 +1074,14 @@ public class Repository {
                     byte[] conflictContent = conflictAction(curValue,givenValue);
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-                    System.out.println("Encountered a merge conflict.");
+//                    System.out.println("Encountered a merge conflict.");
                     mergeConflict = true;
                 }
             }
         }
         if(mergeConflict) {
             // Do not create a commit.
+            System.out.println("Encountered a merge conflict.");
             return;
         }
         String mergeMsg = "Merged %s into %s.";
@@ -1183,17 +1192,21 @@ public class Repository {
         String givenContentStr = (givenContent == null) ? "" : new String(givenContent);
 
         StringBuilder conflictBuilder = new StringBuilder();
-        conflictBuilder.append("<<<<<<< HEAD");
+        conflictBuilder.append("<<<<<<< HEAD\n");
         conflictBuilder.append(curContentStr);
-        conflictBuilder.append("=======");
+        conflictBuilder.append("\n");
+        conflictBuilder.append("=======\n");
         conflictBuilder.append(givenContentStr);
-        conflictBuilder.append(">>>>>>>");
+        conflictBuilder.append("\n");
+        conflictBuilder.append(">>>>>>>\n");
 
 
         return Utils.serialize(conflictBuilder.toString());
     }
 
     public Commit findTheSplitPoint(Commit cur,Commit given,String curHashcode,String givenHashcode) {
+        // debug find all parents
+
         // use this set to record the parents' hashcode
         HashSet<String> curAncestors = new HashSet<>();
         curAncestors.add(curHashcode);
