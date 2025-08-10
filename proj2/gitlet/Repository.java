@@ -922,10 +922,11 @@ public class Repository {
 
 
         // find the split point
-        Commit splitPoint = findTheSplitPoint(curCommit,branchCommit,curCommitHashcode,branchHashcode);
+        String splitHashcode = findTheSplitPoint(curCommitHashcode,branchHashcode);
+        Commit splitPoint = getCommit(splitHashcode);
 
         // If the split point is the same commit as the given branch, then we do nothing
-        if(splitPoint.equals(branchCommit)) {
+        if(splitHashcode.equals(branchHashcode)) {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
         }
@@ -957,7 +958,7 @@ public class Repository {
         }
 
         // If the split point is the current branch, then the effect is to check out the given branch
-        if(splitPoint.equals(curCommit)) {
+        if(splitHashcode.equals(curCommitHashcode)) {
             // overwrite .gitlet/heads/master --> branchHashcode
             // update the Commit position
             System.out.println("Current branch fast-forwarded.");
@@ -1204,7 +1205,7 @@ public class Repository {
     }
 
 
-    public Commit findTheSplitPoint(Commit cur,Commit given,String curHashcode,String givenHashcode) {
+    public String findTheSplitPoint(String curHashcode,String givenHashcode) {
 
         // get the cur Branch (BFS)
         HashSet<String> curAncestors = new HashSet<>();
@@ -1220,30 +1221,30 @@ public class Repository {
             }
             curAncestors.add(hashcode);
 
-            Commit nextCommit = getParentCommit(hashcode);
+            Commit nextCommit = getCommit(hashcode);
             List<String> parentsList = nextCommit.getParents();
 
-            for(String s:parentsList) {
-                queue.add(s);
-            }
-
+            queue.addAll(parentsList);
         }
+
 
         // now the queue is empty
         // GO through given branch (BFS)
-        queue.add(givenHashcode);
         HashSet<String> visited = new HashSet<>();
+
+        queue.add(givenHashcode);
         visited.add(givenHashcode);
         while(!queue.isEmpty()) {
             String gHashcode = queue.poll();
 
             if(curAncestors.contains(gHashcode)) {
                 // it is the splitCommit
-                File givenCommitFile= getHashFile(OBJECTS,gHashcode);
-                return readObject(givenCommitFile, Commit.class);
+//                File givenCommitFile= getHashFile(OBJECTS,gHashcode);
+//                return readObject(givenCommitFile, Commit.class);
+                return gHashcode;
             }
 
-            Commit nextGivenCommit = getParentCommit(gHashcode);
+            Commit nextGivenCommit = getCommit(gHashcode);
             List<String> givenParentsList = nextGivenCommit.getParents();
 
             for(String s: givenParentsList) {
@@ -1259,9 +1260,9 @@ public class Repository {
     }
 
 
-    public Commit getParentCommit(String parentHashcode) {
-        File ParentFile = getHashFile(OBJECTS,parentHashcode);
-        return readObject(ParentFile,Commit.class);
+    public Commit getCommit(String Hashcode) {
+        File commitFile = getHashFile(OBJECTS,Hashcode);
+        return readObject(commitFile,Commit.class);
     }
 
 
