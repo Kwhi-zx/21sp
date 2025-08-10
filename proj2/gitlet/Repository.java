@@ -5,6 +5,7 @@ import static gitlet.Utils.*;
 // any imports you need here
 import java.io.IOException;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -1197,20 +1198,25 @@ public class Repository {
         }
 
 
-        String curContentStr = (curContent == null) ? "" : new String(curContent);
-        String givenContentStr = (givenContent == null) ? "" : new String(givenContent);
+        String curContentStr = (curContent == null) ? "" : new String(curContent, StandardCharsets.UTF_8);
+        String givenContentStr = (givenContent == null) ? "" : new String(givenContent, StandardCharsets.UTF_8);
 
         StringBuilder conflictBuilder = new StringBuilder();
         conflictBuilder.append("<<<<<<< HEAD\n");
         conflictBuilder.append(curContentStr);
-        conflictBuilder.append("\n");
+        if (!curContentStr.endsWith("\n")) {
+            conflictBuilder.append("\n");
+        }
         conflictBuilder.append("=======\n");
         conflictBuilder.append(givenContentStr);
-        conflictBuilder.append("\n");
+        if (!givenContentStr.endsWith("\n")) {
+            conflictBuilder.append("\n");
+        }
         conflictBuilder.append(">>>>>>>\n");
 
 
-        return Utils.serialize(conflictBuilder.toString());
+//        return Utils.serialize(conflictBuilder.toString());
+        return conflictBuilder.toString().getBytes(StandardCharsets.UTF_8);
     }
 
 
