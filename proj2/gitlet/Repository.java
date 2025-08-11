@@ -984,7 +984,7 @@ public class Repository {
         if(mergeConflict) {
             // Do not create a commit.
             System.out.println("Encountered a merge conflict.");
-            return;
+//            return;
         }
         String mergeMsg = "Merged %s into %s.";
         mergeCommit(String.format(mergeMsg,branchName,headPosition.getName()),
@@ -1215,7 +1215,6 @@ public class Repository {
         conflictBuilder.append(">>>>>>>\n");
 
 
-//        return Utils.serialize(conflictBuilder.toString());
         return conflictBuilder.toString().getBytes(StandardCharsets.UTF_8);
     }
 
