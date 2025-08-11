@@ -2,6 +2,7 @@ package gitlet;
 
 import static gitlet.Utils.*;
 
+
 // any imports you need here
 import java.io.IOException;
 import java.io.File;
@@ -9,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import static java.io.File.separator;
 
 /** Represents a gitlet repository.
  *  It's a good idea to give a description here of what else this Class
@@ -45,6 +47,11 @@ public class Repository {
     /** HEAD*/
     public static final File HEAD = join(GITLET_DIR,"HEAD");
 
+    /** Remote instance*/
+    public static final File CONFIG = join(GITLET_DIR,"config");
+    public static final File FETCH_HEAD = join(GITLET_DIR,"FETCH_HEAD");
+    public static final File REMOTES = join(REFS,"remotes");
+
 
 
     /* fill in the rest of this class. */
@@ -69,12 +76,17 @@ public class Repository {
         OBJECTS.mkdir();
         REFS.mkdir();
         Heads.mkdir();
+        // remote
+        REMOTES.mkdir();
 
         // create file
         try {
             STAGING_AREA.createNewFile();
             REMOVE_INDEX.createNewFile();
             HEAD.createNewFile(); // where the HEAD pointer --> storing a path
+            // remote file
+            CONFIG.createNewFile();
+            FETCH_HEAD.createNewFile();
         }catch (IOException e) {
             e.printStackTrace();
         }
@@ -1342,6 +1354,57 @@ public class Repository {
         }
         return RmFile;
     }
+
+    /** remote function */
+
+
+    public void addRemote(String remoteName,String remoteDir) {
+        // .git/config
+        HashMap<String,String> remoteConfig = getRemoteConfig();
+        // error check
+        if(remoteConfig.containsKey(remoteName)) {
+            System.out.println("A remote with that name already exists.");
+            return;
+        }
+        // Always use forward slashes in these commands.
+        // Have your program convert all the forward slashes into the path separator character
+        String robustRemoteDir = remoteDir.replace("/",separator);
+        // add remote
+        remoteConfig.put(remoteName,robustRemoteDir);
+        // refresh the file
+        writeObject(CONFIG,remoteConfig);
+    }
+
+    public void rmRemote(String remoteName) {
+        // .git/config
+        HashMap<String,String> remoteConfig = getRemoteConfig();
+        if(!remoteConfig.containsKey(remoteName)) {
+            System.out.println("A remote with that name does not exist.");
+            return;
+        }
+        // remove remote
+        remoteConfig.remove(remoteName);
+        // refresh the file
+        writeObject(CONFIG,remoteConfig);
+    }
+
+    public HashMap<String,String> getRemoteConfig() {
+        HashMap<String,String> remoteConfig = new HashMap<>();
+        // persistence
+        if(CONFIG.length() != 0) {
+            remoteConfig = readObject(CONFIG,HashMap.class);
+        }
+        return remoteConfig;
+    }
+
+    public void push() {
+        
+    }
+
+
+
+
+
 
 
 
