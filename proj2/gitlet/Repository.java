@@ -994,9 +994,7 @@ public class Repository {
         boolean mergeConflict = threeWayMerge(allFilepathset,curHashmap,givenHashmap,splitHashmap);
 
         if(mergeConflict) {
-            // Do not create a commit.
             System.out.println("Encountered a merge conflict.");
-//            return;
         }
         String mergeMsg = "Merged %s into %s.";
         mergeCommit(String.format(mergeMsg,branchName,headPosition.getName()),
@@ -1038,8 +1036,6 @@ public class Repository {
                     byte[] conflictContent = conflictAction(curValue,givenValue);
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-//                    System.out.println("Encountered a merge conflict.");
-//                    mergeConflict = true;
                     return true;
                 }
 
@@ -1074,8 +1070,6 @@ public class Repository {
                     byte[] conflictContent = conflictAction(curValue,"");
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-//                    System.out.println("Encountered a merge conflict.");
-//                    mergeConflict = true;
                     return true;
                 }
 
@@ -1089,8 +1083,6 @@ public class Repository {
                     byte[] conflictContent = conflictAction("",givenValue);
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-//                    System.out.println("Encountered a merge conflict.");
-//                    mergeConflict = true;
                     return true;
                 }
 
@@ -1104,8 +1096,6 @@ public class Repository {
                     byte[] conflictContent = conflictAction(curValue,givenValue);
                     stageConflictContent(pathName,conflictContent);
                     writeContents(fileInSet,conflictContent);
-//                    System.out.println("Encountered a merge conflict.");
-//                    mergeConflict = true;
                     return true;
                 }
             }
@@ -1232,27 +1222,9 @@ public class Repository {
 
 
     public String findTheSplitPoint(String curHashcode,String givenHashcode) {
-
-        // get the cur Branch (BFS)
-        HashSet<String> curAncestors = new HashSet<>();
+        
+        HashSet<String> curAncestors = getBranch(curHashcode); // get the keyset of the cur branch history
         Queue<String> queue = new ArrayDeque<>(); // helper data structure
-        queue.add(curHashcode);
-
-        while(!queue.isEmpty()) {
-            // Displaying and remove the head
-            String hashcode = queue.poll();
-            // avoid dup
-            if(curAncestors.contains(hashcode)) {
-                continue;
-            }
-            curAncestors.add(hashcode);
-
-            Commit nextCommit = getCommit(hashcode);
-            List<String> parentsList = nextCommit.getParents();
-
-            queue.addAll(parentsList);
-        }
-
 
         // now the queue is empty
         // GO through given branch (BFS)
@@ -1284,6 +1256,191 @@ public class Repository {
     }
 
 
+    /** remote function Begin */
+
+
+    // Saves the given login information under the given remote name.
+    // Attempts to push or pull from the given remote name will then attempt to use this .gitlet directory.
+    public void addRemote(String remoteName,String remoteDir) {
+        // .gitlet/config
+        HashMap<String,String> remoteConfig = getRemoteConfig();
+        // error check
+        if(remoteConfig.containsKey(remoteName)) {
+            System.out.println("A remote with that name already exists.");
+            return;
+        }
+        // Always use forward slashes in these commands.
+        // Have your program convert all the forward slashes into the path separator character
+        String robustRemoteDir = remoteDir.replace("/",separator);
+        // add remote
+        remoteConfig.put(remoteName,robustRemoteDir);
+        // refresh the file
+        writeObject(CONFIG,remoteConfig);
+    }
+
+    public void rmRemote(String remoteName) {
+        // .gitlet/config
+        HashMap<String,String> remoteConfig = getRemoteConfig();
+        if(!remoteConfig.containsKey(remoteName)) {
+            System.out.println("A remote with that name does not exist.");
+            return;
+        }
+        // remove remote
+        remoteConfig.remove(remoteName);
+        // refresh the file
+        writeObject(CONFIG,remoteConfig);
+    }
+
+    public void push(String remoteName,String remoteBranchName) {
+        HashMap<String,String> remoteConfig = getRemoteConfig();
+        // Attempts to push the given remote name will then attempt to use this .gitlet directory.
+        String remoteDir = "";
+        if(remoteConfig.containsKey(remoteName)) {
+            remoteDir = remoteConfig.get(remoteName);
+        }
+        if(remoteDir.isEmpty()) {
+            System.out.println("Remote directory not found.");
+        }
+
+        // remote/.gitlet
+        File remoteDirF = new File(remoteDir);
+        // remote/.gitlet/refs/heads/remoteBranchName
+        File remoteBranchFile = join(remoteDirF,"refs","heads",remoteBranchName);
+        // get the remote branch name (Commit) Hashcode
+        String rHeadHashcode = "";
+        if(remoteBranchFile.exists()) {
+            rHeadHashcode = readContentsAsString(remoteBranchFile);
+            // if it not exists --> writeContents in the end
+        }
+        // check if it is the history of the current local head
+        String curHashcode = getHeadHashCode();
+        HashSet<String> curAncestor = getBranch(curHashcode);
+        boolean isHistory = false;
+
+        if(curAncestor.contains(rHeadHashcode)) {
+            isHistory = true;
+        }
+        // This command only works if the remote branch’s head is in the history of the current local head
+        if(!isHistory) {
+            System.out.println("Please pull down remote changes before pushing.");
+            return;
+        }
+        // In this case, append the future commits to the remote branch.
+        // the remote should reset to the front of the appended commits
+
+        // get the curBranch commit history set
+        HashMap<String,Commit> curBranchHistory = collectBranchHistory(curHashcode,rHeadHashcode);
+
+        // update history: write Commit contents && write Blob
+        for(String cbHashcode:curBranchHistory.keySet()) {
+
+            // remote/.gitlet/objects/..
+            File remoteObj = join(remoteDirF,"objects");
+
+            // writing the Commit to the remote repo
+            Commit commitToPush = curBranchHistory.get(cbHashcode);
+            File writingCommitFile = getHashFile(remoteObj,cbHashcode);
+            writeObject(writingCommitFile,commitToPush);
+
+            // writing the contents to the remote repo
+            HashMap<String,String> curCommitBlob = commitToPush.getFilesCommitBlob();
+            for(String blobHashcode:curCommitBlob.values()) {
+                // read from local file
+                File blobFile = getHashFile(OBJECTS,blobHashcode);
+                byte[] contentsToPush = readContents(blobFile);
+
+                // update to the remote
+                File writingContentsFile = getHashFile(remoteObj,blobHashcode);
+                writeContents(writingContentsFile,contentsToPush);
+
+            }
+
+        }
+
+        // If the Gitlet system on the remote machine exists but does not have the input branch,
+        // then simply add the branch to the remote Gitlet.
+        // write cur Commit Hashcode
+        writeContents(remoteBranchFile,curHashcode);
+
+    }
+
+    public HashSet<String> getBranch(String curHashcode) {
+        // get the cur Branch (BFS)
+        HashSet<String> curAncestors = new HashSet<>();
+        Queue<String> queue = new ArrayDeque<>(); // helper data structure
+        queue.add(curHashcode);
+
+        while(!queue.isEmpty()) {
+            // Displaying and remove the head
+            String hashcode = queue.poll();
+            // avoid dup
+            if(curAncestors.contains(hashcode)) {
+                continue;
+            }
+            curAncestors.add(hashcode);
+
+            Commit nextCommit = getCommit(hashcode);
+            List<String> parentsList = nextCommit.getParents();
+
+            queue.addAll(parentsList);
+        }
+        return curAncestors;
+    }
+
+    // if have two parents and one the remote don't need ?
+    public HashMap<String,Commit> collectBranchHistory(String curHashcode,String remoteHashcode) {
+        // BFS
+        HashMap<String,Commit> curToRemoteHistory = new HashMap<>();
+        Queue<String> queue = new ArrayDeque<>(); // helper data structure
+        queue.add(curHashcode);
+
+        while(!queue.isEmpty()) {
+            // Displaying and remove the head
+            String hashcode = queue.poll();
+            if(remoteHashcode.equals(hashcode)) {
+                break;
+            }
+            // avoid dup
+            if(curToRemoteHistory.containsKey(hashcode)) {
+                continue;
+            }
+            // collect hashcode and commit
+            Commit commitValue = getCommit(hashcode);
+            curToRemoteHistory.put(hashcode,commitValue);
+            List<String> parentsList = commitValue.getParents();
+            queue.addAll(parentsList);
+        }
+
+        return curToRemoteHistory;
+    }
+
+
+
+
+    public void fetch(String remoteName,String remoteBranchName) {
+        // Brings down commits from the remote Gitlet repository into the local Gitlet repository.
+
+        // .gitlet/refs/remotes/remoteName(i.e origin)/remoteBranchName(i.e main)
+
+        // FETCH_HEAD --> refs/remotes/remoteName(i.e origin)/remoteBranchName
+    }
+
+    public void pull(String remoteName,String remoteBranchName) {
+
+    }
+
+
+    /** remote function END*/
+
+    public HashMap<String,String> getRemoteConfig() {
+        HashMap<String,String> remoteConfig = new HashMap<>();
+        // persistence
+        if(CONFIG.length() != 0) {
+            remoteConfig = readObject(CONFIG,HashMap.class);
+        }
+        return remoteConfig;
+    }
+
     public Commit getCommit(String Hashcode) {
         File commitFile = getHashFile(OBJECTS,Hashcode);
         return readObject(commitFile,Commit.class);
@@ -1310,6 +1467,7 @@ public class Repository {
         File headFile = getHashFile(OBJECTS,headHashcode);
         return Utils.readObject(headFile, Commit.class);
     }
+
 
     public String getHeadName() {
         String headRef = readContentsAsString(HEAD); // refs/heads/...
@@ -1355,51 +1513,7 @@ public class Repository {
         return RmFile;
     }
 
-    /** remote function */
 
-
-    public void addRemote(String remoteName,String remoteDir) {
-        // .git/config
-        HashMap<String,String> remoteConfig = getRemoteConfig();
-        // error check
-        if(remoteConfig.containsKey(remoteName)) {
-            System.out.println("A remote with that name already exists.");
-            return;
-        }
-        // Always use forward slashes in these commands.
-        // Have your program convert all the forward slashes into the path separator character
-        String robustRemoteDir = remoteDir.replace("/",separator);
-        // add remote
-        remoteConfig.put(remoteName,robustRemoteDir);
-        // refresh the file
-        writeObject(CONFIG,remoteConfig);
-    }
-
-    public void rmRemote(String remoteName) {
-        // .git/config
-        HashMap<String,String> remoteConfig = getRemoteConfig();
-        if(!remoteConfig.containsKey(remoteName)) {
-            System.out.println("A remote with that name does not exist.");
-            return;
-        }
-        // remove remote
-        remoteConfig.remove(remoteName);
-        // refresh the file
-        writeObject(CONFIG,remoteConfig);
-    }
-
-    public HashMap<String,String> getRemoteConfig() {
-        HashMap<String,String> remoteConfig = new HashMap<>();
-        // persistence
-        if(CONFIG.length() != 0) {
-            remoteConfig = readObject(CONFIG,HashMap.class);
-        }
-        return remoteConfig;
-    }
-
-    public void push() {
-        
-    }
 
 
 

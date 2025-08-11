@@ -158,14 +158,37 @@ public class Main {
             }
             case "push": {
                 // java gitlet.Main push [remote name] [remote branch name]
+                if(args[1].isEmpty() || args[2].isEmpty()) {
+                    System.out.println("Correct: push [remote name] [remote branch name]");
+                    System.exit(0);
+                }
+                String remoteName = args[1];
+                String remoteBranchName = args[2];
+                repo.push(remoteName,remoteBranchName);
                 break;
             }
             case "fetch": {
                 // java gitlet.Main fetch [remote name] [remote branch name]
+                if(args[1].isEmpty() || args[2].isEmpty()) {
+                    System.out.println("Correct: fetch [remote name] [remote branch name]");
+                    System.exit(0);
+                }
+
+                String remoteName = args[1];
+                String remoteBranchName = args[2];
+                repo.fetch(remoteName,remoteBranchName);
                 break;
             }
             case "pull": {
                 // java gitlet.Main pull [remote name] [remote branch name]
+                if(args[1].isEmpty() || args[2].isEmpty()) {
+                    System.out.println("Correct: pull [remote name] [remote branch name]");
+                    System.exit(0);
+                }
+
+                String remoteName = args[1];
+                String remoteBranchName = args[2];
+                repo.pull(remoteName,remoteBranchName);
                 break;
             }
             default: {
