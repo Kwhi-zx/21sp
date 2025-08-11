@@ -1222,7 +1222,7 @@ public class Repository {
 
 
     public String findTheSplitPoint(String curHashcode,String givenHashcode) {
-        
+
         HashSet<String> curAncestors = getBranch(curHashcode); // get the keyset of the cur branch history
         Queue<String> queue = new ArrayDeque<>(); // helper data structure
 
@@ -1387,7 +1387,7 @@ public class Repository {
         return curAncestors;
     }
 
-    // if have two parents and one the remote don't need ?
+
     public HashMap<String,Commit> collectBranchHistory(String curHashcode,String remoteHashcode) {
         // BFS
         HashMap<String,Commit> curToRemoteHistory = new HashMap<>();
@@ -1398,7 +1398,8 @@ public class Repository {
             // Displaying and remove the head
             String hashcode = queue.poll();
             if(remoteHashcode.equals(hashcode)) {
-                break;
+                // it will exclude the remote Point parents
+                continue;
             }
             // avoid dup
             if(curToRemoteHistory.containsKey(hashcode)) {
