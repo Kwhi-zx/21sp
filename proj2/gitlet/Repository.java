@@ -1204,12 +1204,12 @@ public class Repository {
         StringBuilder conflictBuilder = new StringBuilder();
         conflictBuilder.append("<<<<<<< HEAD\n");
         conflictBuilder.append(curContentStr);
-        if (!curContentStr.endsWith("\n")) {
+        if (!curContentStr.isEmpty() && !curContentStr.endsWith("\n")) {
             conflictBuilder.append("\n");
         }
         conflictBuilder.append("=======\n");
         conflictBuilder.append(givenContentStr);
-        if (!givenContentStr.endsWith("\n")) {
+        if (!givenContentStr.isEmpty() && !givenContentStr.endsWith("\n")) {
             conflictBuilder.append("\n");
         }
         conflictBuilder.append(">>>>>>>\n");
