@@ -76,6 +76,13 @@ private String parent;
   public static final File Heads = join(REFS,"heads");
       /** HEAD*/
   public static final File HEAD = join(GITLET_DIR,"HEAD");
+  
+      /** Remote instance*/
+  public static final File CONFIG = join(GITLET_DIR,"config");
+  public static final File FETCH_HEAD = join(GITLET_DIR,"FETCH_HEAD");
+  public static final File REMOTES = join(REFS,"remotes");
+  
+  
   ```
   
 * ~~~
@@ -107,9 +114,18 @@ private String parent;
   	|	 |	  |	
       |	 |	  |--cool-beans: 
   	|	 |
+  	|	 |
+  	|	 |--remotes
+  	|	 |
+  	|
+  	| 
+  	|---config:hashmap:(remoteName,robustRemoteDir) (i.e origin:url)
   	|
   	|
   	|---HEAD:refs/heads/xxx
+  	|
+  	|
+  	|---FETCH_HEAD
   	|
   
   ~~~

@@ -1432,7 +1432,7 @@ public class Repository {
 
 
     /** remote function END*/
-
+    @SuppressWarnings("unchecked")
     public HashMap<String,String> getRemoteConfig() {
         HashMap<String,String> remoteConfig = new HashMap<>();
         // persistence
