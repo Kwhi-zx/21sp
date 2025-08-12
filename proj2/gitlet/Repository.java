@@ -1295,16 +1295,18 @@ public class Repository {
         HashMap<String,String> remoteConfig = getRemoteConfig();
         // Attempts to push the given remote name will then attempt to use this .gitlet directory.
         String remoteDir = "";
-        if(remoteConfig.containsKey(remoteName)) {
-            remoteDir = remoteConfig.get(remoteName);
+        if(!remoteConfig.containsKey(remoteName)) {
+            System.out.println("Remote directory not found.");
+            return;
         }
-        if(remoteDir.isEmpty()) {
+        remoteDir = remoteConfig.get(remoteName);
+        // remote/.gitlet
+        File remoteDirF = new File(remoteDir);
+        if(!remoteDirF.exists()) {
             System.out.println("Remote directory not found.");
             return;
         }
 
-        // remote/.gitlet
-        File remoteDirF = new File(remoteDir);
         // remote/.gitlet/refs/heads/remoteBranchName
         File remoteBranchFile = join(remoteDirF,"refs","heads",remoteBranchName);
         // get the remote branch name (Commit) Hashcode
@@ -1393,16 +1395,20 @@ public class Repository {
         // read from .gitlet/config
         HashMap<String,String> remoteConfig = getRemoteConfig();
         String remoteDir = "";
-        if(remoteConfig.containsKey(remoteName)) {
-            remoteDir = remoteConfig.get(remoteName);
+        if(!remoteConfig.containsKey(remoteName)) {
+            System.out.println("Remote directory not found.");
+            return;
         }
-        if(remoteDir.isEmpty()) {
+        remoteDir = remoteConfig.get(remoteName);
+        // remote/.gitlet
+        File remoteDirF = new File(remoteDir);
+
+        if(!remoteDirF.exists()) {
             System.out.println("Remote directory not found.");
             return;
         }
 
-        // remote/.gitlet
-        File remoteDirF = new File(remoteDir);
+
         // remote/.gitlet/refs/heads/remoteBranchName
         File remoteBranchFile = join(remoteDirF,"refs","heads",remoteBranchName);
         if(!remoteBranchFile.exists()) {
@@ -1460,6 +1466,116 @@ public class Repository {
         // i.e: f7a3d6    https://github.com/xxx/21sp
         writeContents(FETCH_HEAD,rHeadHashcode + " " + remoteDir);
     }
+
+    public void pull(String remoteName,String remoteBranchName) {
+        // Fetches branch [remote name]/[remote branch name] as for the fetch command
+        fetch(remoteName,remoteBranchName);
+        // and then merges that fetch into the current branch.
+        pullMerge(remoteName,remoteBranchName);
+    }
+
+    public void pullMerge(String remoteName,String remoteBranchName) {
+
+        // If there are staged additions or removals present
+        HashMap<String,String> stagingArea = getStagingArea();
+        HashSet<String> rmStagingArea = getRmStagingArea();
+        if(!stagingArea.isEmpty() || !rmStagingArea.isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+
+        // .gitlet/refs/remotes/remoteName/remoteBranchName
+        File branchPosition = join(REMOTES,remoteName,remoteBranchName);
+        if(!branchPosition.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        String branchHashcode =readContentsAsString(branchPosition);
+        File branchCommitFile = getHashFile(OBJECTS,branchHashcode);
+        Commit branchCommit = readObject(branchCommitFile,Commit.class);
+
+        // get cur commit
+        String headPositionStr = readContentsAsString(HEAD);
+        File headPosition = new File(headPositionStr);
+        if(remoteBranchName.equals(headPosition.getName())) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+        String curCommitHashcode = readContentsAsString(headPosition);
+        File curCommitFile = getHashFile(OBJECTS,curCommitHashcode);
+        Commit curCommit = readObject(curCommitFile,Commit.class);
+
+
+        // find the split point
+        String splitHashcode = findTheSplitPoint(curCommitHashcode,branchHashcode);
+        Commit splitPoint = getCommit(splitHashcode);
+
+        // If the split point is the same commit as the given branch, then we do nothing
+        if(splitHashcode.equals(branchHashcode)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+
+
+        // get Commit Hashmap
+        HashMap<String,String> curHashmap = curCommit.getFilesCommitBlob();
+        HashMap<String,String> givenHashmap = branchCommit.getFilesCommitBlob();
+        HashMap<String,String> splitHashmap = splitPoint.getFilesCommitBlob();
+        List<String> fileList = plainFilenamesIn(CWD);
+
+        // If an untracked file in the current commit would be overwritten or deleted by the merge
+        // untracked: not stage and not commit
+
+        if(fileList != null) {
+            for(String filename:fileList) {
+                File f = new File(filename);
+                String untrackedPath = f.getPath();
+                // && !staging.contains --> but we have checks no files in staging
+                if(!curHashmap.containsKey(untrackedPath)) {
+                    boolean wouldBeOverwritten = givenHashmap.containsKey(untrackedPath);
+                    boolean wouldBeDeleted = splitHashmap.containsKey(untrackedPath) && !givenHashmap.containsKey(untrackedPath);
+                    if(wouldBeDeleted || wouldBeOverwritten) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        return;
+                    }
+                }
+            }
+        }
+
+        // If the split point is the current branch, then the effect is to check out the given branch
+        if(splitHashcode.equals(curCommitHashcode)) {
+            // overwrite .gitlet/heads/master --> branchHashcode
+            // update the Commit position
+            System.out.println("Current branch fast-forwarded.");
+            writeContents(headPosition,branchHashcode);
+            // CWD files update
+            refreshCWD(curHashmap,givenHashmap,fileList);
+
+            return;
+        }
+
+
+        /** three-way merge */
+
+        // merge these hashmap key
+        Set<String> allFilepathset = new HashSet<>();
+        allFilepathset.addAll(curHashmap.keySet());
+        allFilepathset.addAll(givenHashmap.keySet());
+        allFilepathset.addAll(splitHashmap.keySet());
+
+        boolean mergeConflict = threeWayMerge(allFilepathset,curHashmap,givenHashmap,splitHashmap);
+
+        if(mergeConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
+        String mergeMsg = "Merged %s into %s.";
+        mergeCommit(String.format(mergeMsg,remoteBranchName,headPosition.getName()),
+                curCommit,
+                headPosition.getName(),
+                curCommitHashcode,
+                branchHashcode);
+    }
+
 
 
 
@@ -1528,9 +1644,7 @@ public class Repository {
         return curToRemoteHistory;
     }
 
-    public void pull(String remoteName,String remoteBranchName) {
 
-    }
 
 
     /** remote function END*/
@@ -1549,7 +1663,8 @@ public class Repository {
         return readObject(commitFile,Commit.class);
     }
     public Commit getRemoteCommit(File remoteDir,String hashcode) {
-        File commitFile = join(remoteDir,"objects");
+        File objDir = join(remoteDir,"objects");
+        File commitFile = getHashFile(objDir,hashcode);
         return readObject(commitFile, Commit.class);
     }
 
