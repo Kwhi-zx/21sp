@@ -1342,7 +1342,8 @@ public class Repository {
 
             // writing the Commit to the remote repo
             Commit commitToPush = curBranchHistory.get(cbHashcode);
-            File writingCommitFile = getHashFile(remoteObj,cbHashcode);
+//            File writingCommitFile = getHashFile(remoteObj,cbHashcode);
+            File writingCommitFile = checkGetHashFile(remoteObj,cbHashcode);
             writeObject(writingCommitFile,commitToPush);
 
             // writing the contents to the remote repo
@@ -1353,7 +1354,8 @@ public class Repository {
                 byte[] contentsToPush = readContents(blobFile);
 
                 // update to the remote
-                File writingContentsFile = getHashFile(remoteObj,blobHashcode);
+//                File writingContentsFile = getHashFile(remoteObj,blobHashcode);
+                File writingContentsFile = checkGetHashFile(remoteObj,blobHashcode);
                 writeContents(writingContentsFile,contentsToPush);
 
             }
@@ -1432,8 +1434,8 @@ public class Repository {
 
             // writing the Commit to the local repo
             Commit commitToFetch = remoteBranchHistory.get(rbHashcode);
-            File writingCommitFile = getHashFile(OBJECTS,rbHashcode);
-            writeObject(writingCommitFile,commitToFetch);
+            File writingCommitFile = checkGetHashFile(OBJECTS,rbHashcode);
+            Utils.writeObject(writingCommitFile,commitToFetch);
 
             // writing the contents to the remote repo
             HashMap<String,String> remoteCommitBlob = commitToFetch.getFilesCommitBlob();
@@ -1444,7 +1446,8 @@ public class Repository {
                 byte[] contentsToFetch = readContents(blobFile);
 
                 // update to local objects
-                File writingContentsFile = getHashFile(OBJECTS,blobHashcode);
+//                File writingContentsFile = getHashFile(OBJECTS,blobHashcode);
+                File writingContentsFile = checkGetHashFile(OBJECTS,blobHashcode);
                 writeContents(writingContentsFile,contentsToFetch);
 
             }
@@ -1682,6 +1685,16 @@ public class Repository {
         String headHashDirName = hashcode.substring(0,2);
         String headHashFileName = hashcode.substring(2);
         return join(path,headHashDirName,headHashFileName);
+    }
+
+    public File checkGetHashFile(File path,String hashcode) {
+        String headHashDirName = hashcode.substring(0,2);
+        String headHashFileName = hashcode.substring(2);
+        File objDir = join(path,headHashDirName);
+        if(!objDir.exists()) {
+            objDir.mkdir();
+        }
+        return join(objDir,headHashFileName);
     }
 
     public Commit getCurCommit() {
