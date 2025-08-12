@@ -692,8 +692,10 @@ public class Repository {
 
         // .gitlet/HEAD  --> check if it is
         // .gitlet/heads/master
-        String curHeadName = getHeadName();
-        if(branchName.equals(curHeadName)) {
+        String headRef = readContentsAsString(HEAD); // refs/heads/...
+//        String curHeadName = headRef.substring(headRef.lastIndexOf('/') + 1);
+//        if(branchName.equals(curHeadName) && )
+        if(headRef.equals(branchFile.getPath())) {
             System.out.println("No need to checkout the current branch.");
             return;
         }
@@ -1503,9 +1505,10 @@ public class Repository {
         Commit branchCommit = readObject(branchCommitFile,Commit.class);
 
         // get cur commit
+        // .gitlet/refs/heads/xxx
         String headPositionStr = readContentsAsString(HEAD);
         File headPosition = new File(headPositionStr);
-        if(remoteBranchName.equals(headPosition.getName())) {
+        if(headPositionStr.equals(branchPosition.getPath())) {
             System.out.println("Cannot merge a branch with itself.");
             return;
         }
