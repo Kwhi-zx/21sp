@@ -1580,7 +1580,7 @@ public class Repository {
             System.out.println("Encountered a merge conflict.");
         }
         String mergeMsg = "Merged %s into %s.";
-        mergeCommit(String.format(mergeMsg,remoteBranchName,headPosition.getName()),
+        mergeCommit(String.format(mergeMsg,remoteName+"/"+remoteBranchName,headPosition.getName()),
                 curCommit,
                 headPosition.getName(),
                 curCommitHashcode,
