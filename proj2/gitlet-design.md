@@ -115,8 +115,14 @@ private String parent;
       |	 |	  |--cool-beans: 
   	|	 |
   	|	 |
-  	|	 |--remotes
-  	|	 |
+  	|	 |--remotes：
+  	|	 |		|
+  	|	 |		|--remoteName(i.e origin)
+  	|	 |				|
+  	|	 |				|--remoteBranchName(i.e main)
+  	|	 |				|         |
+  	|	 |				|  		  |--commit ID
+  	|	 |				|
   	|
   	| 
   	|---config:hashmap:(remoteName,robustRemoteDir) (i.e origin:url)

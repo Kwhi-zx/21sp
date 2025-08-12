@@ -1300,6 +1300,7 @@ public class Repository {
         }
         if(remoteDir.isEmpty()) {
             System.out.println("Remote directory not found.");
+            return;
         }
 
         // remote/.gitlet
@@ -1328,14 +1329,14 @@ public class Repository {
         // In this case, append the future commits to the remote branch.
         // the remote should reset to the front of the appended commits
 
-        // get the curBranch commit history set
-        HashMap<String,Commit> curBranchHistory = collectBranchHistory(curHashcode,rHeadHashcode);
+        // remote/.gitlet/objects/..
+        File remoteObj = join(remoteDirF,"objects");
+
+        // get the curBranch commit history map
+        HashMap<String,Commit> curBranchHistory = collectBranchHistory(remoteObj,curHashcode,rHeadHashcode);
 
         // update history: write Commit contents && write Blob
         for(String cbHashcode:curBranchHistory.keySet()) {
-
-            // remote/.gitlet/objects/..
-            File remoteObj = join(remoteDirF,"objects");
 
             // writing the Commit to the remote repo
             Commit commitToPush = curBranchHistory.get(cbHashcode);
@@ -1387,12 +1388,119 @@ public class Repository {
         return curAncestors;
     }
 
+    // Brings down commits from the remote Gitlet repository into the local Gitlet repository.
+    public void fetch(String remoteName,String remoteBranchName) {
+        // read from .gitlet/config
+        HashMap<String,String> remoteConfig = getRemoteConfig();
+        String remoteDir = "";
+        if(remoteConfig.containsKey(remoteName)) {
+            remoteDir = remoteConfig.get(remoteName);
+        }
+        if(remoteDir.isEmpty()) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
 
-    public HashMap<String,Commit> collectBranchHistory(String curHashcode,String remoteHashcode) {
+        // remote/.gitlet
+        File remoteDirF = new File(remoteDir);
+        // remote/.gitlet/refs/heads/remoteBranchName
+        File remoteBranchFile = join(remoteDirF,"refs","heads",remoteBranchName);
+        if(!remoteBranchFile.exists()) {
+            System.out.println("That remote does not have that branch.");
+            return;
+        }
+
+        // get the remote branch name (Commit) Hashcode
+        String rHeadHashcode = readContentsAsString(remoteBranchFile);
+        // get the local branch Commit hashcode
+        String curHashcode = getHeadHashCode();
+
+        // remote/.gitlet/objects
+        File remoteObj = join(remoteDirF,"objects");
+
+        // get the remoteBranch commit history map
+        HashMap<String,Commit> remoteBranchHistory = collectRemoteBranchHistory(remoteDirF,rHeadHashcode,curHashcode);
+
+        // .gitlet/objects --> remote blob and commit
+        for(String rbHashcode:remoteBranchHistory.keySet()) {
+
+            // writing the Commit to the local repo
+            Commit commitToFetch = remoteBranchHistory.get(rbHashcode);
+            File writingCommitFile = getHashFile(OBJECTS,rbHashcode);
+            writeObject(writingCommitFile,commitToFetch);
+
+            // writing the contents to the remote repo
+            HashMap<String,String> remoteCommitBlob = commitToFetch.getFilesCommitBlob();
+
+            for(String blobHashcode:remoteCommitBlob.values()) {
+                // read from remote
+                File blobFile = getHashFile(remoteObj,blobHashcode);
+                byte[] contentsToFetch = readContents(blobFile);
+
+                // update to local objects
+                File writingContentsFile = getHashFile(OBJECTS,blobHashcode);
+                writeContents(writingContentsFile,contentsToFetch);
+
+            }
+
+        }
+
+        // .gitlet/refs/remotes/remoteName(i.e origin)/remoteBranchName(i.e main)
+        // store Commit id
+        File localRemoteName = join(REMOTES,remoteName);
+        if(!localRemoteName.exists()) {
+            localRemoteName.mkdir();
+        }
+        File localRemoteBranchName = join(localRemoteName,remoteBranchName);
+        // if exists or not --> write
+        writeContents(localRemoteBranchName,rHeadHashcode);
+
+        // FETCH_HEAD --> commitId remoteDir
+        // it is absolute name here
+        // i.e: f7a3d6    https://github.com/xxx/21sp
+        writeContents(FETCH_HEAD,rHeadHashcode + " " + remoteDir);
+    }
+
+
+
+    public HashMap<String,Commit> collectRemoteBranchHistory(File f,String remoteHashcode,String curHashcode) {
+        HashMap<String,Commit> remoteHistory = new HashMap<>();
+        Queue<String> queue = new ArrayDeque<>(); // helper data structure
+        queue.add(remoteHashcode);
+        HashSet<String> localExistCommit = getObjects(OBJECTS);
+
+        while(!queue.isEmpty()) {
+            String hashcode = queue.poll();
+            // it will exclude the local cur Commit
+            if(curHashcode.equals(hashcode)) {
+                continue;
+            }
+            // avoid dup
+            if(remoteHistory.containsKey(hashcode)) {
+                continue;
+            }
+            // avoid local exist
+            if(localExistCommit.contains(hashcode)) {
+                continue;
+            }
+
+            // collect hashcode and commit
+            Commit commitValue = getRemoteCommit(f,hashcode);
+            remoteHistory.put(hashcode,commitValue);
+            List<String> parentsList = commitValue.getParents();
+            queue.addAll(parentsList);
+
+        }
+
+        return remoteHistory;
+    }
+
+    public HashMap<String,Commit> collectBranchHistory(File path,String curHashcode,String remoteHashcode) {
         // BFS
         HashMap<String,Commit> curToRemoteHistory = new HashMap<>();
         Queue<String> queue = new ArrayDeque<>(); // helper data structure
         queue.add(curHashcode);
+        HashSet<String> remoteExistCommit = getObjects(path);
 
         while(!queue.isEmpty()) {
             // Displaying and remove the head
@@ -1405,6 +1513,11 @@ public class Repository {
             if(curToRemoteHistory.containsKey(hashcode)) {
                 continue;
             }
+            // avoid remote exist
+            if(remoteExistCommit.contains(hashcode)) {
+                continue;
+            }
+
             // collect hashcode and commit
             Commit commitValue = getCommit(hashcode);
             curToRemoteHistory.put(hashcode,commitValue);
@@ -1413,17 +1526,6 @@ public class Repository {
         }
 
         return curToRemoteHistory;
-    }
-
-
-
-
-    public void fetch(String remoteName,String remoteBranchName) {
-        // Brings down commits from the remote Gitlet repository into the local Gitlet repository.
-
-        // .gitlet/refs/remotes/remoteName(i.e origin)/remoteBranchName(i.e main)
-
-        // FETCH_HEAD --> refs/remotes/remoteName(i.e origin)/remoteBranchName
     }
 
     public void pull(String remoteName,String remoteBranchName) {
@@ -1442,9 +1544,13 @@ public class Repository {
         return remoteConfig;
     }
 
-    public Commit getCommit(String Hashcode) {
-        File commitFile = getHashFile(OBJECTS,Hashcode);
+    public Commit getCommit(String hashcode) {
+        File commitFile = getHashFile(OBJECTS,hashcode);
         return readObject(commitFile,Commit.class);
+    }
+    public Commit getRemoteCommit(File remoteDir,String hashcode) {
+        File commitFile = join(remoteDir,"objects");
+        return readObject(commitFile, Commit.class);
     }
 
 
@@ -1512,6 +1618,31 @@ public class Repository {
             RmFile = readObject(REMOVE_INDEX,HashSet.class);
         }
         return RmFile;
+    }
+
+    @SuppressWarnings("unchecked")
+    public HashSet<String> getObjects(File path) {
+        HashSet<String> exist = new HashSet<>();
+        // .gitlet/objects/xx
+        // remote/.gitlet/objects/xx
+        File[] filesList = path.listFiles();
+        if (filesList != null) {
+            for(File dir:filesList) {
+                List<String> filenames = Utils.plainFilenamesIn(dir);
+                for(String filename:filenames) {
+                    File file = join(dir,filename); // .gitlet/objects/xx + /...
+                    try {
+                        // find all the commit that the objects have
+                        Commit logCommit = readObject(file,Commit.class);
+                        String hashcode = dir.getName() + filename; //  /xx + /...
+                        exist.add(hashcode);
+                    } catch (Exception e) {
+                        // Just ignore it and continue to the next file.
+                    }
+                }
+            }
+        }
+        return exist;
     }
 
 
