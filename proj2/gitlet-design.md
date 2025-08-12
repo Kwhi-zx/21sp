@@ -2,6 +2,10 @@
 
 **Name**:wzx
 
+Date of Begin: 2025/7/29
+
+Date of End: 2025/8/12
+
 ## Classes and Data Structures
 
 ### Commit (implements Serializable)
@@ -11,7 +15,8 @@
 * ```java
   private String message;
   private Date timestamp;
-private String parent;
+// 使用List存储，因为在merge中会出现多个Parents
+  private List<String> parents; 
   // 用于存储此Commit中修改的文件路径以及其哈希值
   // (key:value) --> (path:hashcode)
   private HashMap<String,String> filesandBlob; // hello.txt && hashcode
@@ -43,14 +48,6 @@ private String parent;
 ![1754126923485](C:\Users\HUAWEI\AppData\Roaming\Typora\typora-user-images\1754126923485.png)
 
 
-
-#### function
-
-* get function
-
-* set function
-
-  
 
 
 ### Repository
@@ -98,6 +95,10 @@ private String parent;
   	|		|
   	|		|---2d(new Commit)	(add)
   	|		|	|---3c
+  	|		|
+  	|		|
+  	|		|---pull Commit && pull Blob also store here
+  	|		|
   	|
   	|
   	|---index(暂存区) --> (文件路径:文件内容哈希值) i.e (wug.txt:...) sha1(contents) 
@@ -131,7 +132,7 @@ private String parent;
   	|---HEAD:refs/heads/xxx
   	|
   	|
-  	|---FETCH_HEAD
+  	|---FETCH_HEAD: commitId remoteDir
   	|
   
   ~~~
@@ -164,123 +165,8 @@ private String parent;
   
   ![1754536724990](C:\Users\HUAWEI\AppData\Roaming\Typora\typora-user-images\1754536724990.png)
   
-* init()
-
-  ~~~java
-  // 在当前目录中创建一个新的 Gitlet 版本控制系统
-  // 如果当前目录中已经存在一个 Gitlet 版本控制系统，它应该中止。
   
-  # 创建gitlet所需要的文件、目录
-  # 初始化Commit
-    
-      Commit initCommit  
-  1、初始化HEAD指针
-  --> writeContents() .gitlet/refs/heads/master to .gitlet/HEAD    
-  2、计算出Commit的哈希值，并将其存储到 ...    
-  --> Utils.serialize(initCommit);(byte[]类型)
-  --> hashcode = Utils.sha1(); // 计算出该Commit的哈希值 i.e f3af0eb43
-  --> writeContents() hashcode to /refs/heads/master  
-  3、存储initCommit
-  --> writeObjects() initCommit to .gitlet/objects/f3/af0eb43    
-  ~~~
-
-* add(File name)
-
-  ~~~java
-  // 将文件当前存在的副本添加到暂存区
-  // 如果文件不存在，则打印错误消息 File does not exist.
   
-  // 获得文件内容、哈希值、文件路径
-  // name如果是以相对路径写入，则获取的路径也是相对路径
-  byte[] contents = readContents(name);
-  String hashcode = Utils.sha1(contents);
-  String path = name.getPath(); 
-  // 获得头指针的Commit -- curCommit
-  
-  // logic pic
-  
-      read from STAGING_AREA(.gitlet/index)
-  --- 如果已经暂存的文件再次暂存，则会用新内容覆盖暂存区中的先前条目
-  --> 
-  ~~~
-
-* commit()
-
-  ~~~
-  
-  ~~~
-
-* rm()
-
-  ~~~
-  
-  ~~~
-
-* log()
-
-  ~~~
-  
-  ~~~
-
-* global-log()
-
-  ~~~
-  
-  ~~~
-
-* find()
-
-  ~~~
-  
-  ~~~
-
-  
-
-* status()
-
-  ~~~
-  
-  ~~~
-
-  
-
-* checkout()
-
-  ~~~
-  
-  ~~~
-
-  
-
-* branch()
-
-  ~~~
-  
-  ~~~
-
-  
-
-* rm-branch()
-
-  ~~~
-  
-  ~~~
-
-  
-
-* reset()
-
-  ~~~
-  
-  ~~~
-
-  
-
-* merge()
-
-  ~~~
-  
-  ~~~
 
 ### Utils
 
@@ -308,16 +194,25 @@ readObject(file,Commit.class/Hashmap.class)
 ### findSplitPoint
 
 ~~~markdown
-# 搜索策略：BFS  
+# 搜索策略：BFS:Use queue data structure help
 ## DFS NOT WORK HERE --> 使用迭代
+
+logic pic:
+------------------------------------------------------------------------
+get one branch all history commit --- 存储在HashSet中
+---> go through another branch history (BFS:use queue)
+---> if Hashset.contains() --- it is the splitCommit ---> return
+---> if not  ---> get Commit parents 
+---> is visited.contains() ---> continue
+---> if not  ---> add in the queue
+
+---------------------------------------------------------------------------
 
 ~~~
 
 
 
 
-
-## Persistence
 
 
 
