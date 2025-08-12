@@ -681,8 +681,13 @@ public class Repository {
         // .gitlet/refs/heads/branchName --> check if it exists
         File branchFile = join(Heads,branchName);
         if(!branchFile.exists()) {
-            System.out.println("No such branch exists.");
-            return;
+            /** add remote func*/
+            // .gitlet/refs/remotes/remoteName/remoteBranchName
+            branchFile = join(REMOTES,branchName);
+            if(!branchFile.exists()) {
+                System.out.println("No such branch exists.");
+                return;
+            }
         }
 
         // .gitlet/HEAD  --> check if it is
