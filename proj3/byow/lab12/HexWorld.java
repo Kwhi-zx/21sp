@@ -15,7 +15,8 @@ public class HexWorld {
     private static final int WIDTH = 60;
     private static final int HEIGHT = 50;
 
-    private static final int HEX_SIZE = 3;
+    private static final int HEX_SIZE = 4;
+    private static final int TESS_SIZE = 5;
 
     private static final long SEED = 2873123;
     private static final Random RANDOM = new Random(SEED);
@@ -80,7 +81,8 @@ public class HexWorld {
             case 1: return Tileset.FLOWER;
             case 2: return Tileset.MOUNTAIN;
             case 3: return Tileset.SAND;
-            default: return Tileset.GRASS;
+            case 4: return Tileset.GRASS;
+            default: return Tileset.NOTHING;
         }
 
     }
@@ -108,7 +110,7 @@ public class HexWorld {
         // draw the middle part
         int mx = WIDTH / 2 - 1;
         int my = 1;
-        drawHexagonLine(5,world,mx,my);
+        drawHexagonLine(TESS_SIZE,world,mx,my);
 
         // draw the padding part
         for(int i=1;i<=2;i++) {
@@ -116,11 +118,11 @@ public class HexWorld {
             int yH = my + HEX_SIZE * i;
             // draw left side
             int xLeft = mx - (HEX_SIZE * 2 - 1)* i;
-            drawHexagonLine(5-i,world,xLeft,yH);
+            drawHexagonLine(TESS_SIZE-i,world,xLeft,yH);
 
             // draw right side
             int xRight = mx + (HEX_SIZE * 2 - 1) * i;
-            drawHexagonLine(5-i,world,xRight,yH);
+            drawHexagonLine(TESS_SIZE-i,world,xRight,yH);
         }
 
 
