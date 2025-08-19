@@ -45,7 +45,7 @@ Date of End: 2025/8/12
   ```
   
 
-![1754126923485](C:\Users\HUAWEI\AppData\Roaming\Typora\typora-user-images\1754126923485.png)
+![1754126923485](./1754126923485.png)
 
 
 
@@ -163,7 +163,7 @@ Date of End: 2025/8/12
   
   ~~~
   
-  ![1754536724990](C:\Users\HUAWEI\AppData\Roaming\Typora\typora-user-images\1754536724990.png)
+  ![1754536724990](./1754536724990.png)
   
   
   
