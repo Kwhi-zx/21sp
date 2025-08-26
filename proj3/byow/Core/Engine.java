@@ -10,6 +10,8 @@ public class Engine {
     public static final int WIDTH = 81;
     public static final int HEIGHT = 61;
 
+    World world = new World(WIDTH,HEIGHT);
+
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.

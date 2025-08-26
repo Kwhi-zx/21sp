@@ -1,6 +1,7 @@
 package byow.Core.Components;
 
 import byow.Core.*;
+import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
@@ -60,7 +61,7 @@ public class Room {
         // inflation
         for(int i=ex; i< ex+fw; i++) {
             for(int j=ey; j< ey+fh; j++) {
-                world.getTiles()[i][j] = Tileset.TILE;
+                world.getTiles()[i][j] = Tileset.ROOMGAP;
             }
         }
 
@@ -86,6 +87,24 @@ public class Room {
             }
         }
         return false;
+    }
+
+    public static void main(String[] args) {
+
+        TERenderer ter = new TERenderer();
+        ter.initialize(81,61);
+
+        World world = new World(81,61);
+        world.initialize();
+        Variables variables = new Variables(114514);
+        Room room = new Room();
+        Wall wall = new Wall();
+        Road road = new Road();
+        room.createRooms(world,variables);
+        wall.createWall(world,variables);
+        road.createMaze(world,variables);
+
+        ter.renderFrame(world.getTiles());
     }
 
 

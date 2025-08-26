@@ -8,12 +8,26 @@ public class World {
     private int height;
     TETile[][] tiles;
 
-    public World(int width,int height) {
-
+    public World(int w,int h) {
+        this.width = w;
+        this.height = h;
+        tiles = new TETile[w][h];
     }
 
     public TETile[][] getTiles() {
         return this.tiles;
+    }
+
+    public void initialize() {
+        fillWithNothing();
+    }
+
+    private void fillWithNothing() {
+        for(int i=0; i<width; i++) {
+            for(int j=0; j<height; j++) {
+                tiles[i][j] = Tileset.NOTHING;
+            }
+        }
     }
 
     // generate random position X
@@ -26,6 +40,14 @@ public class World {
         return variables.getRANDOM().nextInt((height - h - 1) / 2) * 2 + 1;
     }
 
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
     public boolean isNothing(int x, int y) {
         return tiles[x][y] == Tileset.NOTHING;
     }
@@ -34,8 +56,13 @@ public class World {
         return tiles[x][y] == Tileset.ROOM;
     }
 
+    public boolean isWall(int x, int y) {
+
+        return tiles[x][y] == Tileset.WALL;
+    }
+
     public boolean isTileGap(int x, int y) {
-        return tiles[x][y] == Tileset.TILE;
+        return tiles[x][y] == Tileset.ROOMGAP;
     }
 
 }
