@@ -61,7 +61,7 @@ public class World {
         return tiles[x][y] == Tileset.WALL;
     }
 
-    public boolean isTileGap(int x, int y) {
+    public boolean isRoomGap(int x, int y) {
         return tiles[x][y] == Tileset.ROOMGAP;
     }
 

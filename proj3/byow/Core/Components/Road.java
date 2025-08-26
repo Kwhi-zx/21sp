@@ -13,14 +13,14 @@ import java.util.Stack;
 public class Road {
 
     // dir distance is 2 to make sure the next point position is odd
-    private final Point EAST = new Point(2,0);
-    private final Point WEST = new Point(-2,0);
-    private final Point NORTH = new Point(0,2);
-    private final Point SOUTH = new Point(0,-2);
+    private final Point EAST = new Point(1,0);
+    private final Point WEST = new Point(-1,0);
+    private final Point NORTH = new Point(0,1);
+    private final Point SOUTH = new Point(0,-1);
     private final Point[] POSSIBLE_DIR = new Point[]{EAST,WEST,NORTH,SOUTH};
 
     // Control the twists and turns of the maze
-    private final int WindingPercent = 50;
+    private final int WindingPercent = 30;
 
     public Road() {
 
@@ -78,9 +78,11 @@ public class Road {
 
                 // connect the maze
                 // the GrowStep is 2
-                Point nextCell = cellPoint.add(dir);
+                Point adjacentCell = cellPoint.add(dir); // Point goes 1 step
+                Point nextCell = adjacentCell.add(dir); // Point goes 2 step
+
+                carve(adjacentCell,world);
                 carve(nextCell,world);
-                carve(cellPoint.mid(nextCell),world);
 
                 cells.add(nextCell);
                 lastDir = dir;
@@ -110,8 +112,8 @@ public class Road {
         int dx = dir.getX();
         int dy = dir.getY();
 
-        int xNext = x + dx;
-        int yNext = y + dy;
+        int xNext = x + dx*2;
+        int yNext = y + dy*2;
 
         // board check
         if(xNext > 0 && xNext < world.getWidth() && yNext > 0 && yNext < world.getHeight()) {
@@ -119,6 +121,28 @@ public class Road {
         }
 
         return false;
+    }
+
+    // connect Room and Road
+    public void connectRegion(World world) {
+        int worldWidth = world.getWidth();
+        int worldHeight = world.getHeight();
+
+        for(int i=1; i<worldWidth; i++) {
+            for(int j=1; j<worldHeight; j++) {
+                if(world.isRoomGap(i,j)) {
+                    // if it is room gap
+                    Point point = new Point(i,j);
+                    connectionHelper(point);
+                }
+            }
+        }
+    }
+
+    public void connectionHelper(Point point) {
+        for(Point dir: POSSIBLE_DIR) {
+
+        }
     }
 
 

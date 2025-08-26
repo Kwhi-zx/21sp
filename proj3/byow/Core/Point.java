@@ -49,16 +49,6 @@ public class Point {
         return nP;
     }
 
-    public Point mid(Point p1) {
-        Point nP = this.add(p1);
 
-        int nX = nP.getX()/2;
-        int nY = nP.getY()/2;
-
-        nP.setX(nX);
-        nP.setY(nY);
-
-        return nP;
-    }
 
 }

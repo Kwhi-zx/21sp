@@ -81,7 +81,7 @@ public class Room {
         // check if there is room exist in the position
         for(int i=ex; i< ex+fw; i++) {
             for(int j=ey; j< ey+fh; j++) {
-                if(world.isRoom(i,j) || world.isTileGap(i,j)) {
+                if(world.isRoom(i,j) || world.isRoomGap(i,j)) {
                     return true;
                 }
             }
