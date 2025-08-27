@@ -6,9 +6,7 @@ import byow.Core.Variables;
 import byow.Core.World;
 import byow.TileEngine.Tileset;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 public class Road {
 
@@ -123,26 +121,49 @@ public class Road {
         return false;
     }
 
-    // connect Room and Road
-    public void connectRegion(World world) {
+    /** connect Room and Road */
+
+    public void connectRegions(World world) {
+        List<Point> connectors = findConnector(world);
+        List<Integer> merged = new ArrayList<>();
+        List<Integer> openRegions = new ArrayList<>();
+
+
+    }
+
+    public List<Point> findConnector(World world) {
         int worldWidth = world.getWidth();
         int worldHeight = world.getHeight();
 
+        List<Point> connectors = new ArrayList<>();
         for(int i=1; i<worldWidth; i++) {
             for(int j=1; j<worldHeight; j++) {
                 if(world.isRoomGap(i,j)) {
                     // if it is room gap
                     Point point = new Point(i,j);
-                    connectionHelper(point);
+                    if(isConnector(point,world)) {
+                        connectors.add(point);
+                    }
                 }
             }
         }
+
+        return connectors;
     }
 
-    public void connectionHelper(Point point) {
+    public boolean isConnector(Point point,World world) {
+        int count = 0;
         for(Point dir: POSSIBLE_DIR) {
-
+            Point nP = point.add(dir);
+            if(world.getTiles()[nP.getX()][nP.getY()] != Tileset.NOTHING) {
+                count++;
+            }
         }
+        if(count >= 2) {
+            return true;
+        }
+
+        return false;
     }
 
 
