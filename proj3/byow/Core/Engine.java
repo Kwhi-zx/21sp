@@ -46,7 +46,9 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        Variables variables = new Variables(Integer.parseInt(input));
+        int inputLen = input.length();
+        String seed = input.substring(1,inputLen-1);
+        Variables variables = new Variables(Integer.parseInt(seed));
         variables.initializeTheWorld();
 
         return variables.getWorld().getTiles();
