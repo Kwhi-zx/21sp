@@ -33,11 +33,11 @@ public class World {
     // generate random position X
     // X is odd and value range: (1,width-w-1)
     public int getRandomX(int w, Variables variables) {
-        return variables.getRANDOM().nextInt((width - w - 1) / 2) * 2 + 1;
+        return variables.getRANDOM().nextInt((width - w) / 2) * 2 + 1;
     }
 
     public int getRandomY(int h, Variables variables) {
-        return variables.getRANDOM().nextInt((height - h - 1) / 2) * 2 + 1;
+        return variables.getRANDOM().nextInt((height - h) / 2) * 2 + 1;
     }
 
     public int getWidth() {
@@ -61,8 +61,17 @@ public class World {
         return tiles[x][y] == Tileset.WALL;
     }
 
-    public boolean isRoomGap(int x, int y) {
-        return tiles[x][y] == Tileset.ROOMGAP;
+    public boolean isFloor(int x, int y) {
+        return tiles[x][y] == Tileset.FLOOR;
     }
+
+    public boolean isIssue(int x, int y) {
+        return tiles[x][y] == Tileset.ROOM || tiles[x][y] == Tileset.FLOOR;
+    }
+
+    public boolean isBound(int x, int y) {
+        return x > 0 && x < width && y > 0 && y < height;
+    }
+
 
 }

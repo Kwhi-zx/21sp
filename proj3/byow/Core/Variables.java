@@ -1,5 +1,6 @@
 package byow.Core;
 
+import java.util.HashMap;
 import java.util.Random;
 
 public class Variables {
@@ -13,4 +14,8 @@ public class Variables {
     public Random getRANDOM() {
         return RANDOM;
     }
+
+
+
+
 }

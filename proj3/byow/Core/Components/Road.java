@@ -18,7 +18,7 @@ public class Road {
     private final Point[] POSSIBLE_DIR = new Point[]{EAST,WEST,NORTH,SOUTH};
 
     // Control the twists and turns of the maze
-    private final int WindingPercent = 30;
+    private final int WindingPercent = 35;
 
     public Road() {
 
@@ -49,7 +49,7 @@ public class Road {
         carve(pos,world);
         cells.push(pos);
 
-        // DFS
+        // DFS (Flood fill)
         while(!cells.isEmpty()) {
             Point cellPoint = cells.peek();
 
@@ -114,7 +114,8 @@ public class Road {
         int yNext = y + dy*2;
 
         // board check
-        if(xNext > 0 && xNext < world.getWidth() && yNext > 0 && yNext < world.getHeight()) {
+//        if(xNext > 0 && xNext < world.getWidth() && yNext > 0 && yNext < world.getHeight())
+        if(world.isBound(xNext,yNext)) {
             return world.getTiles()[xNext][yNext] == Tileset.WALL;
         }
 
@@ -123,26 +124,145 @@ public class Road {
 
     /** connect Room and Road */
 
-    public void connectRegions(World world) {
-        List<Point> connectors = findConnector(world);
+
+    private static class RegionData {
+        int[][] regionMap; // record the regions
+        int regionCount; // regions number
+
+        RegionData(int[][] regionMap, int regionCount) {
+            this.regionMap = regionMap;
+            this.regionCount = regionCount;
+        }
+    }
+
+    // Flood fill to label all the region
+    private RegionData findAndLabelRegions(World world) {
+        int width = world.getWidth();
+        int height = world.getHeight();
+        int[][] regionMap = new int[width][height];
+        int regionCount = 0;
+
+        for(int i=0; i<width; i++) {
+            for(int j=0; j<height; j++) {
+                // If we find an un-scanned floor/room tile and it is a new region
+                if(world.isIssue(i,j) && regionMap[i][j] == 0) {
+                    regionCount++;
+                    floodFillBfs(i,j,regionMap,regionCount,world);
+                }
+            }
+        }
+        return new RegionData(regionMap,regionCount);
+    }
+
+    private void floodFillBfs(int x, int y, int[][] regionMap, int regionCount,World world) {
+        Deque<Point> deque = new ArrayDeque<>();
+        deque.add(new Point(x,y));
+
+        regionMap[x][y] = regionCount;
+        while (!deque.isEmpty()) {
+            Point curPoint = deque.poll();
+            for(Point dir: POSSIBLE_DIR) {
+                Point nP = curPoint.add(dir);
+                int nX = nP.getX();
+                int nY = nP.getY();
+                if(world.isBound(nX,nY) && world.isIssue(nX,nY) && regionMap[nX][nY] == 0) {
+                    deque.add(nP);
+                    regionMap[nX][nY] = regionCount;
+                }
+            }
+        }
+    }
+
+    public void connectRegions(World world, Variables variables) {
+        RegionData regionData = findAndLabelRegions(world);
+        int[][] regionMap = regionData.regionMap;
+        int totalCount = regionData.regionCount;
+
+        if(totalCount <= 1) {
+            return; // already connected
+        }
+
+        // connector: (point:regions it connect)
+        HashMap<Point,Set<Integer>> connectorToRegionsMap = findConnector(world,regionMap);
+        List<Point> connectors = new ArrayList<>(connectorToRegionsMap.keySet());
+
         List<Integer> merged = new ArrayList<>();
         List<Integer> openRegions = new ArrayList<>();
 
+        for(int i=0; i<=totalCount; i++) {
+            merged.add(i);
+            if(i > 0) {
+                // region id 0 is an invalid value
+                openRegions.add(i);
+            }
+        }
+
+        // main loop to merge
+        // if open region exist (1 mean already merge together)
+        while (openRegions.size() > 1) {
+            // Pick a random connector
+            Point connector = connectors.get(variables.getRANDOM().nextInt(connectors.size()));
+            carve(connector,world);
+
+            // neighbor region ids
+            Set<Integer> regionsToMerge = new HashSet<>();
+            // go thorough the regions that the connector connects
+            for (int regionID : connectorToRegionsMap.get(connector)) {
+                // Find the ultimate representative of this region.
+                regionsToMerge.add(merged.get(regionID));
+            }
+
+            // if regions size more than 1
+            // mean that exist more than 2 regions need to connect
+            if(regionsToMerge.size() > 1) {
+                Iterator<Integer> it = regionsToMerge.iterator();
+                int dest = it.next(); // the goal region
+                while (it.hasNext()) {
+                    int sourse = it.next(); // the other region
+                    for(int i=1; i<=totalCount; i++) {
+                        // region id begin from 1
+                        if(merged.get(i) == sourse) {
+                            merged.set(i,dest);
+                        }
+                    }
+                    openRegions.remove(Integer.valueOf(sourse));
+                }
+            }
+
+            // remove connector which has been invalid
+            connectors.removeIf(p-> {
+                // set is Non-repeatable, mean that it can't contain the same value
+                Set<Integer> surroundingRegions = new HashSet<>();
+                for(int regionID: connectorToRegionsMap.get(p)) {
+                    // if regions have been merged;
+                    // merged get the same, so it can remove the connectors
+                    surroundingRegions.add(merged.get(regionID));
+                }
+                return surroundingRegions.size() <= 1;
+            });
+
+        }
 
     }
 
-    public List<Point> findConnector(World world) {
+
+    public HashMap<Point,Set<Integer>> findConnector(World world, int[][] regionMap) {
         int worldWidth = world.getWidth();
         int worldHeight = world.getHeight();
 
-        List<Point> connectors = new ArrayList<>();
+        HashMap<Point,Set<Integer>> connectors = new HashMap<>();
+        Set<Integer> neighboringRegions;
         for(int i=1; i<worldWidth; i++) {
             for(int j=1; j<worldHeight; j++) {
-                if(world.isRoomGap(i,j)) {
-                    // if it is room gap
+                if(world.isNothing(i,j)) {
+                    // if it is Nothing
                     Point point = new Point(i,j);
-                    if(isConnector(point,world)) {
-                        connectors.add(point);
+                    // find its neighbor regions, i.e. ROOM or Floor
+                    neighboringRegions = isConnector(point,regionMap,world);
+                    if(neighboringRegions.size() >= 2) {
+                        // if exists more than 2  it is a good connector
+                        // record: (point:regions(which it connect))
+                        connectors.put(point,neighboringRegions);
                     }
                 }
             }
@@ -151,21 +271,28 @@ public class Road {
         return connectors;
     }
 
-    public boolean isConnector(Point point,World world) {
-        int count = 0;
+    public Set<Integer> isConnector(Point point,int[][] regionMap,World world) {
+        Set<Integer> neighboringRegions = new HashSet<>();
         for(Point dir: POSSIBLE_DIR) {
             Point nP = point.add(dir);
-            if(world.getTiles()[nP.getX()][nP.getY()] != Tileset.NOTHING) {
-                count++;
+            int nX = nP.getX();
+            int nY = nP.getY();
+            if(!world.isBound(nX,nY)) {
+                continue;
+            }
+            int regionID = regionMap[nX][nY];
+            // the neighbor is not NOTHING
+            if(regionID > 0) {
+                neighboringRegions.add(regionID);
             }
         }
-        if(count >= 2) {
-            return true;
-        }
-
-        return false;
+        return neighboringRegions;
     }
 
+
+    public void removeDeadEnd() {
+
+    }
 
 
 }

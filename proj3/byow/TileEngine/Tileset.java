@@ -36,8 +36,6 @@ public class Tileset {
 
 
     public static final TETile ROOM = new TETile('□', Color.CYAN, Color.black, "room");
-//    public static final TETile TILE = new TETile('·', new Color(128, 192, 128), Color.black, "tileGap");
-    public static final TETile ROOMGAP = new TETile(' ', Color.black, Color.black, "roomGap");
     // █  ■
     public static final TETile FLOOR = new TETile('█', new Color(128, 192, 128), Color.black,
             "floor");
