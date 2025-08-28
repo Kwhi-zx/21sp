@@ -23,9 +23,9 @@ public class Variables {
         RANDOM = new Random(seed);
     }
 
-    public Variables() {
-        world = new World(Engine.WIDTH,Engine.HEIGHT);
-    }
+//    public Variables() {
+//        world = new World(Engine.WIDTH,Engine.HEIGHT);
+//    }
 
     public void initializeTheWorld() {
         world.initialize();
