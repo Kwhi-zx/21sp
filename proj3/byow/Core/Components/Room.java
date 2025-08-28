@@ -74,25 +74,7 @@ public class Room {
         return false;
     }
 
-    public static void main(String[] args) {
 
-        TERenderer ter = new TERenderer();
-        ter.initialize(61,41);
-
-        World world = new World(61,41);
-        world.initialize();
-        Variables variables = new Variables(2144);
-        Room room = new Room();
-        Wall wall = new Wall();
-        Road road = new Road();
-        room.createRooms(world,variables);
-        wall.createWall(world,variables);
-        road.createMaze(world,variables);
-        road.connectRegions(world,variables);
-        road.removeDeadEnd(world);
-
-        ter.renderFrame(world.getTiles());
-    }
 
 
 

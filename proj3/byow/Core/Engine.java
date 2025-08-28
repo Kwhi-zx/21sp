@@ -7,10 +7,8 @@ public class Engine {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
     // the algorithm requires map's width and height must be odd
-    public static final int WIDTH = 81;
-    public static final int HEIGHT = 61;
-
-    World world = new World(WIDTH,HEIGHT);
+    public static final int WIDTH = 61;
+    public static final int HEIGHT = 41;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -48,7 +46,9 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        TETile[][] finalWorldFrame = null;
-        return finalWorldFrame;
+        Variables variables = new Variables(Integer.parseInt(input));
+        variables.initializeTheWorld();
+
+        return variables.getWorld().getTiles();
     }
 }
