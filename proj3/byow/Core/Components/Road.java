@@ -296,8 +296,8 @@ public class Road {
         int width = world.getWidth();
         int height = world.getHeight();
 
-        for(int i=1; i<width; i++) {
-            for(int j=1; j<height; j++) {
+        for(int i=0; i<width; i++) {
+            for(int j=0; j<height; j++) {
                 Point point = new Point(i,j);
                 removeDeadEndHelper(world,point);
             }
