@@ -48,7 +48,7 @@ public class Engine {
         // that works for many different input types.
         int inputLen = input.length();
         String seed = input.substring(1,inputLen-1);
-        Variables variables = new Variables(Integer.parseInt(seed));
+        Variables variables = new Variables(Long.parseLong(seed));
         variables.initializeTheWorld();
 
         return variables.getWorld().getTiles();
