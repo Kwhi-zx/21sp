@@ -208,7 +208,9 @@ public class Road {
             Set<Integer> regionsToMerge = new HashSet<>();
             // go thorough the regions that the connector connects
             for (int regionID : connectorToRegionsMap.get(connector)) {
-                // Find the ultimate representative of this region.
+                // find the ultimate representative of this region.
+                // if merge region, then the merged id will change
+                // so it is important here to get region id from merged
                 regionsToMerge.add(merged.get(regionID));
             }
 
@@ -290,9 +292,69 @@ public class Road {
     }
 
 
-    public void removeDeadEnd() {
+    public void removeDeadEnd(World world) {
+        int width = world.getWidth();
+        int height = world.getHeight();
+
+        for(int i=0; i<width; i++) {
+            for(int j=0; j<height; j++) {
+                Point point = new Point(i,j);
+                removeDeadEndHelper(world,point);
+            }
+        }
+    }
+
+    public void removeDeadEndHelper(World world, Point point) {
+        Queue<Point> queue = new ArrayDeque<>();
+        queue.add(point);
+
+        while (!queue.isEmpty()) {
+            Point curPoint = queue.poll();
+            if(isDeadEnd(world,curPoint)) {
+                for(Point dir: POSSIBLE_DIR) {
+                    Point nP = curPoint.add(dir);
+                    int nx = nP.getX();
+                    int ny = nP.getY();
+                    if(!world.isBound(nx,ny)) {
+                        continue;
+                    }
+                    if(world.isFloor(nx,ny)) {
+                        queue.add(nP);
+                    }
+                }
+                // remove dead end
+                carveDeadEnd(world,curPoint);
+            }
+        }
+    }
+
+    private void carveDeadEnd(World world,Point point) {
+        int nx = point.getX();
+        int ny = point.getY();
+        world.getTiles()[nx][ny] = Tileset.NOTHING;
+    }
+
+    public boolean isDeadEnd(World world, Point point) {
+        int count = 0;
+        for(Point dir: POSSIBLE_DIR) {
+            Point nP = point.add(dir);
+            int nX = nP.getX();
+            int nY = nP.getY();
+            if(!world.isBound(nX,nY)) {
+                continue;
+            }
+            if(world.isNothing(nX,nY)) {
+                count++;
+            }
+        }
+
+        // if the tiles surrounded with 3 nothing
+        // it is a dead end
+        return count == 3;
 
     }
+
+
 
 
 }

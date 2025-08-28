@@ -81,7 +81,7 @@ public class Room {
 
         World world = new World(61,41);
         world.initialize();
-        Variables variables = new Variables(114514);
+        Variables variables = new Variables(2144);
         Room room = new Room();
         Wall wall = new Wall();
         Road road = new Road();
@@ -89,6 +89,7 @@ public class Room {
         wall.createWall(world,variables);
         road.createMaze(world,variables);
         road.connectRegions(world,variables);
+        road.removeDeadEnd(world);
 
         ter.renderFrame(world.getTiles());
     }
