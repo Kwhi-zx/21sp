@@ -74,27 +74,29 @@ public class Room {
         return false;
     }
 
-    public static void main(String[] args) {
-
-        TERenderer ter = new TERenderer();
-        ter.initialize(61,41);
-
-        World world = new World(61,41);
-        world.initialize();
-        Variables variables = new Variables(444514);
-        Room room = new Room();
-        Wall wall = new Wall();
-        Road road = new Road();
-        room.createRooms(world,variables);
-        wall.createWall(world);
-        road.createMaze(world,variables);
-        road.connectRegions(world,variables);
-        road.removeDeadEnd(world);
-        wall.fixNewWall(world);
-
-        ter.renderFrame(world.getTiles());
-
-    }
+//    public static void main(String[] args) {
+//
+//        TERenderer ter = new TERenderer();
+//        ter.initialize(61,41);
+//
+//        World world = new World(61,41);
+//        world.initialize();
+////        String s = args[0];
+////        long seed = Long.parseLong(s);
+//        Variables variables = new Variables(1234);
+//        Room room = new Room();
+//        Wall wall = new Wall();
+//        Road road = new Road();
+//        room.createRooms(world,variables);
+//        wall.createWall(world);
+//        road.createMaze(world,variables);
+//        road.connectRegions(world,variables);
+//        road.removeDeadEnd(world);
+//        wall.fixNewWall(world);
+//
+//        ter.renderFrame(world.getTiles());
+//
+//    }
 
 
 
