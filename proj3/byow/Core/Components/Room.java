@@ -1,9 +1,8 @@
 package byow.Core.Components;
 
 import byow.Core.*;
-import byow.Core.Character.Character;
+import byow.Core.Character.AVATAR;
 import byow.TileEngine.TERenderer;
-import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
 import static java.lang.Math.min;
@@ -95,8 +94,8 @@ public class Room {
         road.removeDeadEnd(world);
         wall.fixNewWall(world);
 
-//        Character character = new Character();
-//        character.createCharacter(world,variables);
+        AVATAR character = new AVATAR();
+        character.setKwhi(world,variables);
 
         ter.renderFrame(world.getTiles());
 

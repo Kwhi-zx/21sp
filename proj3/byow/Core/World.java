@@ -77,5 +77,9 @@ public class World {
         return tiles[x][y] == Tileset.ROOM || tiles[x][y] == Tileset.FLOOR || tiles[x][y] == Tileset.LOCKED_DOOR;
     }
 
+    public boolean isDoor(int x, int y) {
+        return tiles[x][y] == Tileset.LOCKED_DOOR;
+    }
+
 
 }

@@ -67,4 +67,5 @@ public class Wall {
         int y = point.getY();
         world.getTiles()[x][y] = Tileset.WALL;
     }
+
 }
