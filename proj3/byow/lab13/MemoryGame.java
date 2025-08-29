@@ -28,7 +28,6 @@ public class MemoryGame {
     private static final String[] ENCOURAGEMENT = {"You can do this!", "I believe in you!",
                                                    "You got this!", "You're a star!", "Go Bears!",
                                                    "Too easy for you!", "Wow, so impressive!"};
-
     public static void main(String[] args) {
         if (args.length < 1) {
             System.out.println("Please enter a seed");
@@ -38,8 +37,6 @@ public class MemoryGame {
         long seed = Long.parseLong(args[0]);
         MemoryGame game = new MemoryGame(40, 40, seed);
         game.startGame();
-
-
     }
 
     public MemoryGame(int width, int height, long seed) {
@@ -90,6 +87,7 @@ public class MemoryGame {
             }
             StdDraw.text(3, height - 1, "Round: " + round);
             StdDraw.text(width - 5, height - 1,ENCOURAGEMENT[rand.nextInt(ENCOURAGEMENT.length)]);
+            StdDraw.text(0,height-3,"-".repeat(width * 16));
         }
 
         StdDraw.show();
