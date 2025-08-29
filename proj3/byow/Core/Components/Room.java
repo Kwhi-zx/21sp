@@ -1,6 +1,7 @@
 package byow.Core.Components;
 
 import byow.Core.*;
+import byow.Core.Character.Character;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
@@ -74,29 +75,32 @@ public class Room {
         return false;
     }
 
-//    public static void main(String[] args) {
-//
-//        TERenderer ter = new TERenderer();
-//        ter.initialize(61,41);
-//
-//        World world = new World(61,41);
-//        world.initialize();
-////        String s = args[0];
-////        long seed = Long.parseLong(s);
-//        Variables variables = new Variables(1234);
-//        Room room = new Room();
-//        Wall wall = new Wall();
-//        Road road = new Road();
-//        room.createRooms(world,variables);
-//        wall.createWall(world);
-//        road.createMaze(world,variables);
-//        road.connectRegions(world,variables);
-//        road.removeDeadEnd(world);
-//        wall.fixNewWall(world);
-//
-//        ter.renderFrame(world.getTiles());
-//
-//    }
+    public static void main(String[] args) {
+
+        TERenderer ter = new TERenderer();
+        ter.initialize(61,41);
+
+        World world = new World(61,41);
+        world.initialize();
+//        String s = args[0];
+//        long seed = Long.parseLong(s);
+        Variables variables = new Variables(1234);
+        Room room = new Room();
+        Wall wall = new Wall();
+        Road road = new Road();
+        room.createRooms(world,variables);
+        wall.createWall(world);
+        road.createMaze(world,variables);
+        road.connectRegions(world,variables);
+        road.removeDeadEnd(world);
+        wall.fixNewWall(world);
+
+//        Character character = new Character();
+//        character.createCharacter(world,variables);
+
+        ter.renderFrame(world.getTiles());
+
+    }
 
 
 

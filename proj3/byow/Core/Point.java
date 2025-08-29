@@ -1,10 +1,12 @@
 package byow.Core;
 
 
+import java.util.Objects;
+
 /**
  *  This is a class for position
  * */
-public class Point {
+public class Point implements Comparable<Point>{
     private int x;
     private int y;
 
@@ -49,6 +51,26 @@ public class Point {
         return nP;
     }
 
+    // implements comparable to use sort
+    @Override
+    public int compareTo(Point p) {
+        if(this.x != p.x) {
+            return Integer.compare(this.x,p.x);
+        }
+        return Integer.compare(this.y,p.y);
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) return true;
+        if(obj == null || getClass() != obj.getClass()) return false;
+        Point point = (Point) obj;
 
+        return x == point.x && y == point.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x,y);
+    }
 }

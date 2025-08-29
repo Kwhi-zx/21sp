@@ -69,9 +69,15 @@ public class Road {
                     dir = lastDir;
                 } else {
                     // change another direction
-                    Point[] unmadeArray = unmadeCells.toArray(new Point[0]);
+//                    Point[] unmadeArray = unmadeCells.toArray(new Point[0]);
+                    List<Point> unmadeList = new ArrayList<>(unmadeCells);
+                    // because Point implements Comparable
+                    // sort it so that the dir is in order
+                    // autograder may the same?
+                    Collections.sort(unmadeList);
                     int randomIndex = variables.getRANDOM().nextInt(unmadeCells.size());
-                    dir = unmadeArray[randomIndex];
+//                    dir = unmadeArray[randomIndex];
+                    dir = unmadeList.get(randomIndex);
                 }
 
                 // connect the maze

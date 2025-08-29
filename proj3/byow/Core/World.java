@@ -73,5 +73,9 @@ public class World {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
 
+    public boolean isUnit(int x, int y) {
+        return tiles[x][y] == Tileset.ROOM || tiles[x][y] == Tileset.FLOOR || tiles[x][y] == Tileset.LOCKED_DOOR;
+    }
+
 
 }
