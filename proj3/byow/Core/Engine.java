@@ -102,11 +102,25 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        int inputLen = input.length();
-        String seed = input.substring(1,inputLen-1);
+
+        Utils.StringClass sc = Utils.dealString(input);
+        String seed = sc.seed;
+        String movement = sc.movement;
+        String saveString = sc.saveString;
         Variables variables = new Variables(Long.parseLong(seed));
         variables.initializeTheWorld();
+        if(!movement.isEmpty()) {
+            int mLen = movement.length();
+            for(int i=0; i<mLen; i++) {
+                char move = movement.charAt(i);
+                variables.getAvatar().kMovement(move,variables.getWorld());
+            }
+            if(!saveString.isEmpty()) {
+                System.out.println("coming soon");
+            }
+        }
 
         return variables.getWorld().getTiles();
     }
+
 }

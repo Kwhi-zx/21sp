@@ -1,6 +1,5 @@
 package byow.Core.Character;
 
-import afu.org.checkerframework.checker.oigj.qual.O;
 import byow.Core.Point;
 import byow.Core.Variables;
 import byow.Core.World;
