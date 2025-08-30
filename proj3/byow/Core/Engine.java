@@ -1,7 +1,11 @@
 package byow.Core;
 
+import byow.Core.HUD.Frame;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+import edu.princeton.cs.introcs.StdDraw;
+
+import java.awt.*;
 
 public class Engine {
     TERenderer ter = new TERenderer();
@@ -15,6 +19,58 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        ter.initialize(WIDTH,HEIGHT);
+        Frame framework = new Frame(WIDTH,HEIGHT);
+        // draw the start frame
+        framework.drawStartFrame();
+        String input = framework.inputFromUser(1);
+        switch (input) {
+            case "N","n"->{
+                framework.clearCanvas();
+                // read a seed from user
+                String seedString = framework.inputFromUser();
+                // if seed too long ???????
+                long seed = Long.parseLong(seedString); // if too long?
+                // set font for the maze
+                StdDraw.setFont(new Font("Monaca",Font.PLAIN,20));
+                Variables variables = new Variables(seed);
+                variables.initializeTheWorld();
+                // show the world
+                ter.renderFrame(variables.getWorld().getTiles());
+
+                // user play the game loop
+                String moveString = "";
+                while (true) {
+                    if(StdDraw.hasNextKeyTyped()) {
+                        char moveChar = StdDraw.nextKeyTyped();
+                        variables.getAvatar().kMovement(moveChar, variables.getWorld());
+                        // refresh the world
+                        ter.renderFrame(variables.getWorld().getTiles());
+                        moveString += Character.toString(moveChar);
+                        System.out.println(moveString);
+                        if(moveString.length() >= 2) {
+                            String quitString = moveString.substring(moveString.length()-2);
+                            if (quitString.equals(":q") || quitString.equals(":Q")) {
+                                // save and quit
+                                System.exit(0);
+                            }
+                        }
+
+                    }
+                }
+
+
+            }
+            case "L","l"->{
+
+            }
+            case "Q","q"->{
+                System.exit(0);
+            }
+            default -> {
+                System.out.println("Error input");
+            }
+        }
     }
 
     /**

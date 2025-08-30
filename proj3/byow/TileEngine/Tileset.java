@@ -35,9 +35,9 @@ public class Tileset {
     public static final TETile TREE = new TETile('♠', Color.green, Color.black, "tree");
 
 
-    public static final TETile ROOM = new TETile('█', Color.PINK, Color.black, "room");
+    public static final TETile ROOM = new TETile('※', Color.CYAN, Color.black, "room");
     // █  ■  □
-    public static final TETile FLOOR = new TETile('█', new Color(128, 192, 128), Color.black,
+    public static final TETile FLOOR = new TETile('·', new Color(128, 192, 128), Color.black,
             "floor");
 
 }
